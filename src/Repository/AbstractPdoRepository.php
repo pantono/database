@@ -122,6 +122,9 @@ abstract class AbstractPdoRepository
 
     public function insertOrUpdateCheck(string $table, string $idColumn, mixed $id, array $data): ?int
     {
+        if ($id === null) {
+            return $this->insertOrUpdate($table, $idColumn, $id, $data);
+        }
         $current = $this->selectSingleRow($table, $idColumn, $id);
         if (empty($current)) {
             $this->getDb()->insert($table, $data);
