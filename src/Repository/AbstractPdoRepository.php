@@ -120,6 +120,17 @@ abstract class AbstractPdoRepository
         return null;
     }
 
+    public function insertOrUpdateCheck(string $table, string $idColumn, mixed $id, array $data): ?int
+    {
+        $current = $this->selectSingleRow($table, $idColumn, $id);
+        if (empty($current)) {
+            $this->getDb()->insert($table, $data);
+            return $id;
+        }
+        $this->getDb()->update($table, $data, [$idColumn . '=?' => $id]);
+        return null;
+    }
+
     /**
      * @param array<string,mixed> $data
      */
