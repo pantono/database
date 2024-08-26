@@ -72,6 +72,9 @@ trait SavableModel
                         continue;
                     }
                 }
+                if ($type === 'bool' || $type === 'boolean') {
+                    $value = $value ? 1 : 0;
+                }
 
                 $data[$columnName] = $value;
             }
