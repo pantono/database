@@ -127,6 +127,7 @@ abstract class AbstractPdoRepository
         }
         $current = $this->selectSingleRow($table, $idColumn, $id);
         if (empty($current)) {
+            $data[$idColumn] = $id;
             $this->getDb()->insert($table, $data);
             return $id;
         }
