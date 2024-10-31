@@ -36,6 +36,21 @@ abstract class AbstractPdoRepository
     }
 
     /**
+     * @return array<mixed>|null
+     */
+    public function selectSingleRowLock(string $table, string $column, string|int $value = null): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+        $select = $this->getDb()->select()->from($table)->where($column . '=?', $value);
+        $select .= ' FOR UPDATE';
+        $row = $this->getDb()->fetchRow($select);
+
+        return empty($row) ? null : $row;
+    }
+
+    /**
      * @return array<mixed>
      */
     public function selectSingleRowFromQuery(Select $query): ?array
