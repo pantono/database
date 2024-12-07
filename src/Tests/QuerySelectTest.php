@@ -20,7 +20,7 @@ class QuerySelectTest extends TestCase
     {
         $select = (new Select())->from('table')->where('test_column = ?', 'test');
 
-        $this->assertEqualsIgnoringCase('SELECT table.* FROM table WHERE `test_column` = :param_1', $select->renderQuery());
+        $this->assertEqualsIgnoringCase('SELECT table.* FROM table WHERE `test_column` = :param_' . $select->uniqueId . '1', $select->renderQuery());
     }
 
     public function testLeftJoinPrint(): void
@@ -32,7 +32,7 @@ class QuerySelectTest extends TestCase
     public function testRightJoin(): void
     {
         $select = (new Select())->from('table')->joinRight('joined_table', 'joined_table.id=table.join_id', ['id'])->where('test_column = ?', 'test');
-        $this->assertEqualsIgnoringCase('SELECT table.*, joined_table.id FROM table RIGHT JOIN joined_table ON joined_table.id=table.join_id WHERE `test_column` = :param_1', $select->renderQuery());
+        $this->assertEqualsIgnoringCase('SELECT table.*, joined_table.id FROM table RIGHT JOIN joined_table ON joined_table.id=table.join_id WHERE `test_column` = :param_' . $select->uniqueId . '1', $select->renderQuery());
     }
 
     public function testLimit(): void
@@ -96,9 +96,9 @@ class QuerySelectTest extends TestCase
 
         $this->assertEqualsIgnoringCase('SELECT bcr_scopes.* from bcr_scopes where `enabled` = 1 and `test` = 2', (string)$select);
         $this->assertEquals([
-            ':param_1' => 1,
-            ':param_2' => 2
-        ], $select->getParameters());
+            1,
+            2
+        ], array_values($select->getParameters()));
     }
 
     public function testProperTableInWhere()
@@ -167,5 +167,15 @@ class QuerySelectTest extends TestCase
             ->joinLeft('t3', 't1.other_id=t3.id', []);
 
         $this->assertEqualsIgnoringCase('SELECT COALESCE(t2.col1, t3.col1) as col, COALESCE(t2.col2, t3.col2) as col2 FROM t1 LEFT JOIN t2 on t1.first_id=t2.id LEFT JOIN t3 on t1.other_id=t3.id', (string)$select);
+    }
+
+    public function testUnionSelect(): void
+    {
+        $union = (new Select())->from('t1')->where('test=?', 'union');
+        $select = (new Select())->from('table')
+            ->where('(test = ?', 1)
+            ->orWhere('test = ?)', 2)
+            ->union($union);
+        $this->assertEqualsIgnoringCase("SELECT TABLE.* FROM TABLE WHERE (`test` = 1 OR `test` = 2) UNION ALL SELECT t1.* FROM t1 WHERE `test` = 'union'", (string)$select);
     }
 }
