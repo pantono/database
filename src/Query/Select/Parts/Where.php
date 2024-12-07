@@ -87,14 +87,14 @@ class Where
             $parts = [];
             foreach ($values as $inputValue) {
                 $this->select->parameterIndex++;
-                $parameters[':param_' . $this->select->parameterIndex] = $inputValue;
-                $parts[] = ':param_' . $this->select->parameterIndex;
+                $parameters[':param_' . $this->select->uniqueId . $this->select->parameterIndex] = $inputValue;
+                $parts[] = ':param_' . $this->select->uniqueId . $this->select->parameterIndex;
             }
             $parameterReplacement = implode(', ', $parts);
         } elseif ($values !== '') {
             $this->select->parameterIndex++;
-            $parameters[':param_' . $this->select->parameterIndex] = $values;
-            $parameter = str_replace('?', ':param_' . $this->select->parameterIndex, $parameter);
+            $parameters[':param_' . $this->select->uniqueId . $this->select->parameterIndex] = $values;
+            $parameter = str_replace('?', ':param_' . $this->select->uniqueId . $this->select->parameterIndex, $parameter);
         }
         $pos = strpos($parameter, '?');
         if ($pos !== false) {

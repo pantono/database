@@ -20,6 +20,10 @@ class Select
      * @var Where[]
      */
     protected array $where = [];
+    /**
+     * @var string|Select[]
+     */
+    protected array $union = [];
 
     protected ?int $limit = null;
 
@@ -42,6 +46,12 @@ class Select
     protected array $group = [];
 
     private ?string $alias = null;
+    public string $uniqueId;
+
+    public function __construct()
+    {
+        $this->uniqueId = uniqid();
+    }
 
     /**
      * @param string|array<mixed> $table
@@ -105,6 +115,12 @@ class Select
     public function orWhere(string $query, array|string|null|int $parameters = null): self
     {
         $this->where[] = new Where($query, $parameters, $this, 'or');
+        return $this;
+    }
+
+    public function union(Select|string $select)
+    {
+        $this->union[] = $select;
         return $this;
     }
 
@@ -262,6 +278,17 @@ class Select
                 $query = str_replace($name, $quoted, $query);
             }
         }
+        foreach ($this->union as $union) {
+            if ($union instanceof Select) {
+                foreach ($union->getParameters() as $name => $value) {
+                    $quoted = $this->quoteValue($value);
+                    if (is_int($quoted)) {
+                        $quoted = (string)$quoted;
+                    }
+                    $query = str_replace($name, $quoted, $query);
+                }
+            }
+        }
 
         $formatter = new SqlFormatter();
         return $formatter->compress($query);
@@ -354,6 +381,13 @@ class Select
         if ($this->offset) {
             $select .= ' OFFSET ' . $this->offset;
         }
+        foreach ($this->union as $union) {
+            if ($union instanceof Select) {
+                $select .= PHP_EOL . ' UNION ALL ' . $union->renderQuery();
+            } elseif (is_string($union)) {
+                $select .= PHP_EOL . ' UNION ALL ' . $union;
+            }
+        }
         return trim($select);
     }
 
@@ -366,6 +400,13 @@ class Select
         foreach ($this->where as $where) {
             foreach ($where->getParameters() as $name => $param) {
                 $params[$name] = $param;
+            }
+        }
+        foreach ($this->union as $union) {
+            if ($union instanceof Select) {
+                foreach ($union->getParameters() as $name => $param) {
+                    $params[$name] = $param;
+                }
             }
         }
         return $params;
