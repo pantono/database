@@ -33,6 +33,7 @@ class Select
      * @var Join[]
      */
     protected array $joins = [];
+    protected array $manualParams = [];
 
     public int $parameterIndex = 0;
     /**
@@ -396,7 +397,7 @@ class Select
      */
     public function getParameters(): array
     {
-        $params = [];
+        $params = $this->manualParams;
         foreach ($this->where as $where) {
             foreach ($where->getParameters() as $name => $param) {
                 $params[$name] = $param;
@@ -410,6 +411,11 @@ class Select
             }
         }
         return $params;
+    }
+
+    public function setParameter(string $name, $value): void
+    {
+        $this->manualParams[$name] = $value;
     }
 
     public function getNextParameterName(): string
