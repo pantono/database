@@ -162,6 +162,7 @@ abstract class Db
      */
     public function runQuery(string $query, array $parameters): mixed
     {
+        $this->checkConnection();
         $statement = $this->pdo->prepare($query);
         foreach ($parameters as $key => $value) {
             $statement->bindValue($key, $value);
