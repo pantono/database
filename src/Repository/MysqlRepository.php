@@ -14,9 +14,12 @@ abstract class MysqlRepository extends AbstractPdoRepository
         $query = 'INSERT IGNORE into ' . $table . ' SET ';
         $values = [];
         $parameters = [];
+        $index = 0;
         foreach ($data as $key => $value) {
-            $values[] = '`' . $key . '` = ?';
-            $parameters[] = $value;
+            $named = ':param_' . $index;
+            $values[] = '`' . $key . '` = ' . $named;
+            $parameters[$named] = $value;
+            $index++;
         }
         $query .= implode(', ', $values);
         $this->getDb()->runQuery($query, $parameters);
