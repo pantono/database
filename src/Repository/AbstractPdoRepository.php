@@ -24,7 +24,7 @@ abstract class AbstractPdoRepository
     /**
      * @return array<mixed>|null
      */
-    public function selectSingleRow(string $table, string $column, string|int $value = null): ?array
+    public function selectSingleRow(string $table, string $column, string|int|null $value = null): ?array
     {
         if ($value === null) {
             return null;
@@ -38,7 +38,7 @@ abstract class AbstractPdoRepository
     /**
      * @return array<mixed>|null
      */
-    public function selectSingleRowLock(string $table, string $column, string|int $value = null): ?array
+    public function selectSingleRowLock(string $table, string $column, string|int|null $value = null): ?array
     {
         if ($value === null) {
             return null;
