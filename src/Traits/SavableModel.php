@@ -55,7 +55,7 @@ trait SavableModel
                 $value = $this->$getter();
 
                 if ($value instanceof \DateTimeInterface) {
-                    $value = $value->format('Y-m-d H:i:s');
+                    $value = $value->format($info['format'] ?: 'Y-m-d H:i:s');
                 }
                 if (is_object($value) && method_exists($value, 'getId')) {
                     $value = $value->getId();
