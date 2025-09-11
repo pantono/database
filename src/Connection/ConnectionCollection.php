@@ -49,4 +49,9 @@ class ConnectionCollection
             $this->connections[$name]['connection'] = null;
         }
     }
+
+    public function getConnectionByName(string $name): ?Db
+    {
+        return $this->connections[$name]['connection'] ?? null;
+    }
 }
