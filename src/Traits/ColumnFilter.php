@@ -14,7 +14,7 @@ trait ColumnFilter
             throw new \RuntimeException('Invalid operator');
         }
         $placeholder = '?';
-        if ($operator === 'IN' || $operator === 'NOT IN ') {
+        if ($operator === 'IN' || $operator === 'NOT IN') {
             $placeholder = '(?)';
         }
         $this->columns[] = [
