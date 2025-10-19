@@ -76,7 +76,7 @@ class Where
         if (str_starts_with($queryPart, '(')) {
             $hasBracket = true;
         }
-        preg_match('/(?:(?<table>\w+)\.)?(?<column>\w+)\s*(?<operand>=|<>|in|not in|>=|<=|!=|>|<|is null|like|between)\s*(?<value>.*)/i', $queryPart, $matches);
+        preg_match('/(?:(?<table>\w+)\.)?(?<column>\w+)\s*(?<operand>=|<>|in|not in|>=|<=|!=|>|<|is null|like|between|not like)\s*(?<value>.*)/i', $queryPart, $matches);
         $column = $matches['column'] ?? null;
         $operand = trim($matches['operand']);
         $parameter = trim($matches['value']);
