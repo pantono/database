@@ -178,4 +178,11 @@ class QuerySelectTest extends TestCase
             ->union($union);
         $this->assertEqualsIgnoringCase("SELECT TABLE.* FROM TABLE WHERE (`test` = 1 OR `test` = 2) UNION ALL SELECT t1.* FROM t1 WHERE `test` = 'union'", (string)$select);
     }
+
+    public function testNotInArray(): void
+    {
+        $select = (new Select())->from('t1')->where('t1.test not in (?)', [1, 2]);
+
+        $this->assertEqualsIgnoringCase('SELECT t1.* FROM t1 WHERE `t1`.`test` not in (1, 2)', (string)$select);
+    }
 }
