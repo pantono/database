@@ -20,7 +20,7 @@ class QuerySelectTest extends TestCase
     {
         $select = (new Select())->from('table')->where('test_column = ?', 'test');
 
-        $this->assertEqualsIgnoringCase('SELECT table.* FROM table WHERE `test_column` = :param_' . $select->uniqueId . '1', $select->renderQuery());
+        $this->assertEqualsIgnoringCase('SELECT table.* FROM table WHERE `test_column` = :param_1_' . $select->uniqueId, $select->renderQuery());
     }
 
     public function testLeftJoinPrint(): void
@@ -32,7 +32,7 @@ class QuerySelectTest extends TestCase
     public function testRightJoin(): void
     {
         $select = (new Select())->from('table')->joinRight('joined_table', 'joined_table.id=table.join_id', ['id'])->where('test_column = ?', 'test');
-        $this->assertEqualsIgnoringCase('SELECT table.*, joined_table.id FROM table RIGHT JOIN joined_table ON joined_table.id=table.join_id WHERE `test_column` = :param_' . $select->uniqueId . '1', $select->renderQuery());
+        $this->assertEqualsIgnoringCase('SELECT table.*, joined_table.id FROM table RIGHT JOIN joined_table ON joined_table.id=table.join_id WHERE `test_column` = :param_1_' . $select->uniqueId, $select->renderQuery());
     }
 
     public function testLimit(): void
@@ -185,5 +185,14 @@ class QuerySelectTest extends TestCase
         $select->where('test not like ?', 'test');
 
         $this->assertEqualsIgnoringCase('SELECT t1.* FROM t1 WHERE `test` not like \'test\'', (string)$select);
+    }
+
+    public function testSubQueryCount(): void
+    {
+        $subSelect = (new Select())->from('t1')
+            ->where('code not like ?', 'SKU%3P');
+
+        $countSelect = (new Select())->from(['c' => $subSelect], ['COUNT(1) as cnt']);
+        $this->assertEqualsIgnoringCase('SELECT COUNT(1) as cnt from (SELECT t1.* FROM t1 WHERE `code` not like :param_1_' . $subSelect->uniqueId . ') as c', $countSelect->renderQuery());
     }
 }

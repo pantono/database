@@ -344,7 +344,10 @@ class Select
         }
         $select = 'SELECT ' . implode(', ', $columns);
         if ($this->table instanceof Select) {
-            $select .= ' FROM (' . $this->table->__toString() . ') as ' . $this->alias;
+            $select .= ' FROM (' . $this->table->renderQuery() . ') as ' . $this->alias;
+            foreach ($this->table->getParameters() as $name => $parameter) {
+                $this->setParameter($name, $parameter);
+            }
         } else {
             $select .= ' FROM ' . $this->table;
         }

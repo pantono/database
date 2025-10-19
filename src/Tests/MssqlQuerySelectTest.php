@@ -13,7 +13,7 @@ class MssqlQuerySelectTest extends TestCase
     {
         $select = (new MssqlSelect())->from('table')->where('test_column = ?', 'test');
 
-        $this->assertEqualsIgnoringCase('SELECT table.* FROM table WHERE `test_column` = :param_' . $select->uniqueId . '1', $select->renderQuery());
+        $this->assertEqualsIgnoringCase('SELECT table.* FROM table WHERE `test_column` = :param_1_' . $select->uniqueId, $select->renderQuery());
     }
 
     public function testLeftJoinPrintMssql(): void
@@ -25,7 +25,7 @@ class MssqlQuerySelectTest extends TestCase
     public function testRightJoinMssql(): void
     {
         $select = (new MssqlSelect())->from('table')->joinRight('joined_table', 'joined_table.id=table.join_id', ['id'])->where('test_column = ?', 'test');
-        $this->assertEqualsIgnoringCase('SELECT table.*, joined_table.id FROM table RIGHT JOIN joined_table on joined_table.id=table.join_id WHERE `test_column` = :param_' . $select->uniqueId . '1', $select->renderQuery());
+        $this->assertEqualsIgnoringCase('SELECT table.*, joined_table.id FROM table RIGHT JOIN joined_table on joined_table.id=table.join_id WHERE `test_column` = :param_1_' . $select->uniqueId, $select->renderQuery());
     }
 
     public function testGroupMssql(): void
