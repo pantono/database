@@ -9,7 +9,7 @@ use Pantono\Database\Query\Select\DriverSpecific\MysqlSelect;
 
 class MysqlDb extends Db
 {
-    public function select(): Select
+    public function select(): MysqlSelect
     {
         return new MysqlSelect();
     }

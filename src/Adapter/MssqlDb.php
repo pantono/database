@@ -9,7 +9,7 @@ use Pantono\Database\Query\Select\DriverSpecific\MssqlSelect;
 
 class MssqlDb extends Db
 {
-    public function select(): Select
+    public function select(): MssqlSelect
     {
         return new MssqlSelect();
     }
