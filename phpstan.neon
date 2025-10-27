@@ -6,6 +6,5 @@ parameters:
     - vendor/autoload.php
   excludePaths:
     - "*/Tests/*"
-  checkGenericClassInNonGenericObjectType: false
   ignoreErrors:
     - message: '#^Method (.*)::(.*) has parameter (.*) with no value type specified in iterable type array.$#'

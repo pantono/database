@@ -75,10 +75,12 @@ class Delete
         if (!is_string($queryPart)) {
             throw new \RuntimeException('Invalid query value');
         }
+        /** @var array{column?: string, operand?: string, value?: string} $matches */
+        $matches = [];
         preg_match('/(?<column>\w+)\s*(?<operand>=|<>|in|not in)\s*(?<value>.*)/i', $queryPart, $matches);
         $column = $matches['column'] ?? null;
-        $operand = trim($matches['operand']);
-        $parameter = trim($matches['value']);
+        $operand = isset($matches['operand']) ? trim($matches['operand']) : '';
+        $parameter = isset($matches['value']) ? trim($matches['value']) : '';
         $parameterReplacement = '';
         if (is_array($values)) {
             $parts = [];

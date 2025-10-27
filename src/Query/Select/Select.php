@@ -21,7 +21,7 @@ class Select
      */
     protected array $where = [];
     /**
-     * @var string|Select[]
+     * @var string[]|Select[]
      */
     protected array $union = [];
 
@@ -33,6 +33,9 @@ class Select
      * @var Join[]
      */
     protected array $joins = [];
+    /**
+     * @var array<string, mixed>
+     */
     protected array $manualParams = [];
 
     public int $parameterIndex = 0;
@@ -46,7 +49,7 @@ class Select
      */
     protected array $group = [];
 
-    private ?string $alias = null;
+    protected ?string $alias = null;
     public string $uniqueId;
 
     public function __construct()
@@ -119,7 +122,7 @@ class Select
         return $this;
     }
 
-    public function union(Select|string $select)
+    public function union(Select|string $select): self
     {
         $this->union[] = $select;
         return $this;
@@ -416,7 +419,7 @@ class Select
         return $params;
     }
 
-    public function setParameter(string $name, $value): void
+    public function setParameter(string $name, mixed $value): void
     {
         $this->manualParams[$name] = $value;
     }

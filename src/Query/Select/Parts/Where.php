@@ -76,11 +76,13 @@ class Where
         if (str_starts_with($queryPart, '(')) {
             $hasBracket = true;
         }
+        /** @var array{column?: string, operand?: string, value?: string} $matches */
+        $matches = [];
         preg_match('/(?:(?<table>\w+)\.)?(?<column>\w+)\s*(?<operand>=|<>|in|not in|>=|<=|!=|>|<|is null|like|between|not like)\s*(?<value>.*)/i', $queryPart, $matches);
         $column = $matches['column'] ?? null;
-        $operand = trim($matches['operand']);
-        $parameter = trim($matches['value']);
-        $table = trim($matches['table']);
+        $operand = isset($matches['operand']) ? trim($matches['operand']) : '';
+        $parameter = isset($matches['value']) ? trim($matches['value']) : '';
+        $table = isset($matches['table']) ? trim($matches['table']) : '';
         $parameterReplacement = '';
         $parameters = [];
         if (is_array($values)) {
