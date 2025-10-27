@@ -9,7 +9,7 @@ use Pantono\Database\Query\Select\Select;
 
 abstract class AbstractPdoRepository
 {
-    private Db $db;
+    protected Db $db;
 
     public function __construct(Db $db)
     {

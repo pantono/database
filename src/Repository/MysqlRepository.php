@@ -4,8 +4,19 @@ declare(strict_types=1);
 
 namespace Pantono\Database\Repository;
 
+use Pantono\Database\Adapter\MysqlDb;
+
 abstract class MysqlRepository extends AbstractPdoRepository
 {
+    public function getDb(): MysqlDb
+    {
+        /**
+         * @var MysqlDb $db
+         */
+        $db = $this->db;
+        return $db;
+    }
+
     /**
      * @param array<string,mixed> $data
      */
