@@ -225,4 +225,14 @@ abstract class AbstractPdoRepository
             $this->deleteRetry($table, $params, $tries + 1);
         }
     }
+
+    public function beginTransaction(): void
+    {
+        $this->getDb()->beginTransaction();
+    }
+
+    public function endTransaction(): void
+    {
+        $this->getDb()->endTransaction();
+    }
 }
