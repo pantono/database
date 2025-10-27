@@ -176,6 +176,47 @@ abstract class Db
         return $this->pdo->lastInsertId($table);
     }
 
+    public function beginTransaction(): void
+    {
+        $this->checkConnection();
+        $this->pdo->beginTransaction();
+    }
+
+    public function endTransaction(): void
+    {
+        $this->checkConnection();
+        $attempts = 0;
+        $maxAttempts = 3;
+        do {
+            try {
+                $this->pdo->commit();
+                return;
+            } catch (\PDOException $e) {
+                $sqlState = $e->errorInfo[0] ?? null;
+                $driverCode = (int)($e->errorInfo[1] ?? 0);
+                $message = $e->getMessage();
+
+                $isDeadlock = ($sqlState === '40001' && ($driverCode === 1213 || $driverCode === 1205))
+                    || stripos($message, 'deadlock') !== false;
+
+                if (!$isDeadlock || ++$attempts >= $maxAttempts) {
+                    // Best-effort rollback if still in transaction
+                    try {
+                        if ($this->pdo->inTransaction()) {
+                            $this->pdo->rollBack();
+                        }
+                    } catch (\Throwable $_) {
+                        // swallow
+                    }
+                    throw $e;
+                }
+
+                // Small backoff before retrying
+                usleep(100000 * $attempts); // 100ms, 200ms, 300ms
+            }
+        } while (true);
+    }
+
     private function checkConnection(): void
     {
         if ($this->connected === false) {
