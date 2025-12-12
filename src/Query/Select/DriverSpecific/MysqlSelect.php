@@ -39,7 +39,11 @@ class MysqlSelect extends Select
                 $this->setParameter($name, $parameter);
             }
         } else {
-            $select .= ' FROM ' . $this->table;
+            if ($this->alias) {
+                $select .= ' FROM ' . $this->table . ' as ' . $this->alias;
+            } else {
+                $select .= ' FROM ' . $this->table;
+            }
         }
         if (!empty($this->joins)) {
             foreach ($this->joins as $join) {

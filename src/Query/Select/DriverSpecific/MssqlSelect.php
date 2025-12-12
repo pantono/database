@@ -20,7 +20,11 @@ class MssqlSelect extends Select
             $select .= 'TOP ' . $this->limit . ' ';
         }
         $select .= implode(', ', $columns);
-        $select .= ' FROM ' . $this->table;
+        if ($this->alias) {
+            $select .= ' FROM ' . $this->table . ' as ' . $this->alias;
+        } else {
+            $select .= ' FROM ' . $this->table;
+        }
         if (!empty($this->joins)) {
             foreach ($this->joins as $join) {
                 $select .= $this->renderJoin($join);

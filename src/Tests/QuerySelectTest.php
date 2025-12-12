@@ -113,7 +113,7 @@ class QuerySelectTest extends TestCase
 
     public function testCountQuery()
     {
-        $select = (new Select())->from(['c' => (new Select())->from('test')->where('column=?', 'test')], ['COUNT(1) as cnt']);
+        $select = (new Select())->from(['c' => (new Select())->from('test')->where('`column` = \'test\'')], ['COUNT(1) as cnt']);
 
         $this->assertEqualsIgnoringCase('SELECT COUNT(1) as cnt from (SELECT test.* from test where `column` = \'test\') AS c', (string)$select);
     }
