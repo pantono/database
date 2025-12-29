@@ -6,10 +6,13 @@ trait ColumnFilter
 {
     private array $columns = [];
 
-    public function addColumn(string $column, string $value, string $operator = '='): void
+    public function addColumn(string $column, string|array $value, string $operator = '='): void
     {
         $operator = strtoupper($operator);
-        $allowedOperators = ['=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN'];
+        $allowedOperators = ['=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE'];
+        if (is_array($value)) {
+            $allowedOperators = ['IN', 'NOT IN '];
+        }
         if (!in_array($operator, $allowedOperators)) {
             throw new \RuntimeException('Invalid operator');
         }
