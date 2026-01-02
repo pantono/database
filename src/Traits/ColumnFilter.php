@@ -11,7 +11,7 @@ trait ColumnFilter
         $operator = strtoupper($operator);
         $allowedOperators = ['=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE'];
         if (is_array($value)) {
-            $allowedOperators = ['IN', 'NOT IN '];
+            $allowedOperators = ['IN', 'NOT IN'];
         }
         if (!in_array($operator, $allowedOperators)) {
             throw new \RuntimeException('Invalid operator');
