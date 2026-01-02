@@ -16,7 +16,7 @@ class Update
      */
     private array $parameters;
     /**
-     * @var array<string,string|int>
+     * @var array<string|int, string|int|array<mixed>>
      */
     private array $where;
 
@@ -28,7 +28,7 @@ class Update
 
     /**
      * @param array<string,mixed> $parameters
-     * @param array<string,string|int> $where
+     * @param array<string,string|int|array> $where
      */
     public function __construct(string $table, array $parameters, array $where = [])
     {
@@ -50,10 +50,7 @@ class Update
             $query .= ' WHERE ';
             $whereParts = [];
             foreach ($this->where as $parameter => $value) {
-                [$wherePart, $parameters] = $this->convertQuestionMarks($parameter, $value);
-                foreach ($parameters as $name => $paramValue) {
-                    $this->computedParams[$name] = $paramValue;
-                }
+                $wherePart = $this->formatInput($parameter, $value);
                 $whereParts[] = $wherePart;
             }
             $query .= implode(' AND ', $whereParts);
@@ -78,34 +75,42 @@ class Update
         return $this->computedParams;
     }
 
-    /**
-     * @param array<mixed>|string $parameters
-     * @return array<mixed>
-     */
-    private function convertQuestionMarks(string|int $input, array|string|int $parameters = []): array
+    private function formatInput(string|int $key, string|int|array $value): string
     {
-        if (is_int($input)) {
-            return [$parameters, []];
+        if (is_int($key)) {
+            $queryPart = $value;
+            $values = '';
+        } else {
+            $queryPart = $key;
+            $values = $value;
         }
-        if (str_contains($input, '?') === false) {
-            return [$input, $parameters];
+        if (!is_string($queryPart)) {
+            throw new \RuntimeException('Invalid query value');
         }
-        if (is_string($parameters) || is_int($parameters)) {
-            $parameters = [$parameters];
-        }
-        $namedParameters = [];
-        foreach ($parameters as $parameter) {
-            $this->parameterIndex += 1;
-            $paramName = ':param' . $this->parameterIndex;
-            if (is_null($input)) {
-                $input = '';
+        /** @var array{column?: string, operand?: string, value?: string} $matches */
+        $matches = [];
+        preg_match('/(?<column>\w+)\s*(?<operand>=|<>|in|not in)\s*(?<value>.*)/i', $queryPart, $matches);
+        $column = $matches['column'] ?? null;
+        $operand = isset($matches['operand']) ? trim($matches['operand']) : '';
+        $parameter = isset($matches['value']) ? trim($matches['value']) : '';
+        $parameterReplacement = '';
+        if (is_array($values)) {
+            $parts = [];
+            foreach ($values as $inputValue) {
+                $this->parameterIndex++;
+                $this->computedParams[':param' . $this->parameterIndex] = $inputValue;
+                $parts[] = ':param' . $this->parameterIndex;
             }
-            $input = preg_replace('/\?/', $paramName, $input, 1);
-            $namedParameters[$paramName] = $parameter;
+            $parameterReplacement = implode(', ', $parts);
+        } elseif ($values !== '') {
+            $this->parameterIndex++;
+            $this->computedParams[':param' . $this->parameterIndex] = $values;
+            $parameter = str_replace('?', ':param' . $this->parameterIndex, $parameter);
         }
-        return [
-            $input,
-            $namedParameters
-        ];
+        $pos = strpos($parameter, '?');
+        if ($pos !== false) {
+            $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
+        }
+        return '`' . $column . '` ' . $operand . ' ' . $parameter;
     }
 }
