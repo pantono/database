@@ -6,22 +6,6 @@ use Pantono\Database\Query\Select\Select;
 
 class MysqlSelect extends Select
 {
-    private bool $lockForUpdate = false;
-
-    private bool $lockForShare = false;
-
-    public function setLockForUpdate(bool $value): self
-    {
-        $this->lockForUpdate = $value;
-        return $this;
-    }
-
-    public function setLockForShare(bool $value): self
-    {
-        $this->lockForShare = $value;
-        return $this;
-    }
-
     public function renderQuery(): string
     {
         $columns = [];

@@ -25,6 +25,12 @@ class MssqlSelect extends Select
         } else {
             $select .= ' FROM ' . $this->table;
         }
+        if ($this->lockForShare) {
+            $select .= ' WITH (HOLDLOCK, ROWLOCK) ';
+        }
+        if ($this->lockForUpdate) {
+            $select .= ' WITH (UPDLOCK, ROWLOCK) ';
+        }
         if (!empty($this->joins)) {
             foreach ($this->joins as $join) {
                 $select .= $this->renderJoin($join);

@@ -52,6 +52,10 @@ class Select
     protected ?string $alias = null;
     public string $uniqueId;
 
+    protected bool $lockForUpdate = false;
+
+    protected bool $lockForShare = false;
+
     public function __construct()
     {
         $this->uniqueId = uniqid();
@@ -446,5 +450,17 @@ class Select
         }
 
         throw new \RuntimeException('Invalid reset ' . $name);
+    }
+
+    public function setLockForUpdate(bool $value): self
+    {
+        $this->lockForUpdate = $value;
+        return $this;
+    }
+
+    public function setLockForShare(bool $value): self
+    {
+        $this->lockForShare = $value;
+        return $this;
     }
 }
