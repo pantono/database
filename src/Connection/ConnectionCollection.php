@@ -52,7 +52,7 @@ class ConnectionCollection
             throw new \RuntimeException('No connection registered for type');
         }
         $keys = array_keys($this->connections);
-        return $this->connections[$keys[0]];
+        return $this->connections[$keys[0]]['connection'];
     }
 
     public function closeConnections(): void
