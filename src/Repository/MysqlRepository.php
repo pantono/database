@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pantono\Database\Repository;
 
 use Pantono\Database\Adapter\MysqlDb;
+use Pantono\Database\Query\Insert;
 
 abstract class MysqlRepository extends AbstractPdoRepository
 {
@@ -17,23 +18,14 @@ abstract class MysqlRepository extends AbstractPdoRepository
         return $db;
     }
 
-    /**
-     * @param array<string,mixed> $data
-     */
     public function insertIgnore(string $table, array $data): void
     {
-        $query = 'INSERT IGNORE into ' . $table . ' SET ';
-        $values = [];
-        $parameters = [];
-        $index = 0;
-        foreach ($data as $key => $value) {
-            $named = ':param_' . $index;
-            $values[] = '`' . $key . '` = ' . $named;
-            $parameters[$named] = $value;
-            $index++;
+        $insert = new Insert($table, $data);
+        $query = $insert->renderQuery();
+        if (str_starts_with($query, 'INSERT INTO')) {
+            $query = 'INSERT IGNORE INTO ' . substr($query, 11);
         }
-        $query .= implode(', ', $values);
-        $this->getDb()->runQuery($query, $parameters);
+        $this->getDb()->runQuery($query, $insert->getParameters());
     }
 
     public function getLock(string $lockName, int $timeoutSeconds = 5): bool

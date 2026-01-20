@@ -16,4 +16,9 @@ abstract class MssqlRepository extends AbstractPdoRepository
         $db = $this->db;
         return $db;
     }
+
+    public function insertIgnore(string $table, array $data): void
+    {
+        throw new \RuntimeException('Method not implemented in MSSQL');
+    }
 }

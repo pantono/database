@@ -235,4 +235,9 @@ abstract class AbstractPdoRepository
     {
         $this->getDb()->endTransaction();
     }
+
+    /**
+     * @param array<string,mixed> $data
+     */
+    abstract public function insertIgnore(string $table, array $data): void;
 }
