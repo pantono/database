@@ -9,6 +9,7 @@ use Pantono\Database\Repository\MysqlRepository;
 use Pantono\Database\Repository\HubSqlRepository;
 use Pantono\Database\Repository\StocklinkSqlRepository;
 use Pantono\Database\Repository\MssqlRepository;
+use Pantono\Database\Repository\PgsqlRepository;
 
 class ConnectionCollection
 {
@@ -23,6 +24,8 @@ class ConnectionCollection
             $parentRepository = MysqlRepository::class;
         } elseif ($type === 'mssql') {
             $parentRepository = MssqlRepository::class;
+        } elseif ($type === 'pgsql') {
+            $parentRepository = PgsqlRepository::class;
         } else {
             throw new \RuntimeException('Invalid database connection type ' . $type);
         }
