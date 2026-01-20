@@ -43,7 +43,10 @@ class ConnectionCollection
                 return $connection['connection'];
             }
         }
-        throw new \RuntimeException('No connection registered for type');
+        if (empty($this->connections)) {
+            throw new \RuntimeException('No connection registered for type');
+        }
+        return $this->connections[0];
     }
 
     public function closeConnections(): void
