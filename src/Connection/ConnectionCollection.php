@@ -43,6 +43,11 @@ class ConnectionCollection
                 return $connection['connection'];
             }
         }
+        return $this->getDefaultConnection();
+    }
+
+    public function getDefaultConnection(): Db
+    {
         if (empty($this->connections)) {
             throw new \RuntimeException('No connection registered for type');
         }
