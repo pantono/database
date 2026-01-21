@@ -171,7 +171,7 @@ abstract class AbstractPdoRepository
             $data
         );
 
-        return intval($this->getDb()->lastInsertId());
+        return intval($this->getDb()->lastInsertId($table));
     }
 
     /**

@@ -15,4 +15,9 @@ class MysqlDb extends Db
     {
         return new MysqlSelect(MysqlDb::class);
     }
+
+    public function quoteTable(string $table): string
+    {
+        return self::ESCAPE_STRING . $table . self::ESCAPE_STRING;
+    }
 }

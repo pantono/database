@@ -187,7 +187,11 @@ abstract class Db
     public function lastInsertId(?string $table = null): false|string|int
     {
         $this->checkConnection();
-        return $this->pdo->lastInsertId($table);
+        if ($table) {
+            return $this->pdo->lastInsertId($this->quoteTable($table));
+        }
+
+        return $this->pdo->lastInsertId();
     }
 
     public function beginTransaction(): void
@@ -238,4 +242,6 @@ abstract class Db
             $this->connected = true;
         }
     }
+
+    abstract public function quoteTable(string $table): string;
 }

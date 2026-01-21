@@ -14,4 +14,9 @@ class PgsqlDb extends Db
     {
         return new PgsqlSelect();
     }
+
+    public function quoteTable(string $table): string
+    {
+        return self::ESCAPE_STRING . $table . self::ESCAPE_STRING;
+    }
 }

@@ -15,4 +15,9 @@ class MssqlDb extends Db
     {
         return new MssqlSelect();
     }
+
+    public function quoteTable(string $table): string
+    {
+        return self::ESCAPE_STRING . $table . self::ESCAPE_STRING;
+    }
 }
