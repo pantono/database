@@ -4,6 +4,20 @@ namespace Pantono\Database\Migration\Traits;
 
 trait ReseedIdentityTrait
 {
+    private function saveData(string $table, array $data, string $idColumn = 'id'): void
+    {
+        if (empty($data)) {
+            return;
+        }
+        if (isset($data[0][$idColumn])) {
+            $reseed = true;
+        }
+        $this->table($table)->insert($data)->saveData();
+        if ($reseed) {
+            $this->reseedIdentity($table);
+        }
+    }
+
     private function reseedIdentity(string $table, string $column = 'id')
     {
         $adapter = $this->getAdapter()->getAdapterType();
