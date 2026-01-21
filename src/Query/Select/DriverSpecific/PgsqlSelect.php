@@ -15,9 +15,10 @@ class PgsqlSelect extends Select
     public function renderQuery(): string
     {
         $columns = [];
+        $esc = $this->getTableEscapeString();
         foreach ($this->getColumns() as $column) {
             if ($column['table'] !== null) {
-                $columns[] = $column['table'] . '.' . $column['column'];
+                $columns[] = $esc . $column['table'] . $esc . '.' . $column['column'];
             } else {
                 $columns[] = $column['column'];
             }
@@ -30,9 +31,9 @@ class PgsqlSelect extends Select
             }
         } else {
             if ($this->alias) {
-                $select .= ' FROM ' . $this->table . ' as ' . $this->alias;
+                $select .= ' FROM ' . $esc . $this->table . $esc . ' as ' . $this->alias;
             } else {
-                $select .= ' FROM ' . $this->table;
+                $select .= ' FROM ' . $esc . $this->table . $esc;
             }
         }
         if (!empty($this->joins)) {

@@ -67,7 +67,7 @@ class Select
         $this->driverClass = $driverClass;
     }
 
-    public function getTableEscapeString()
+    public function getTableEscapeString(): string
     {
         if ($this->driverClass === MssqlDb::class) {
             return MssqlDb::ESCAPE_STRING;
@@ -78,6 +78,7 @@ class Select
         if ($this->driverClass === PgsqlDb::class) {
             return PgsqlDb::ESCAPE_STRING;
         }
+        return '';
     }
 
     /**
