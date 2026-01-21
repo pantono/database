@@ -189,7 +189,13 @@ abstract class Db
         $this->checkConnection();
         $driver = $this->getDriverClass();
         if ($driver === PgsqlDb::class && $table !== null) {
-            return $this->pdo->lastInsertId($table . '_' . ($primaryKey ?? 'id') . '_seq');
+            $sequenceName = $table . '_' . ($primaryKey ?? 'id') . '_seq';
+            $check = $this->pdo->prepare("SELECT 1 FROM pg_class WHERE relkind = 'S' AND relname = ?");
+            $check->execute([$sequenceName]);
+            if ($check->fetchColumn()) {
+                return $this->pdo->lastInsertId($sequenceName);
+            }
+            return null;
         }
         if ($driver === MssqlDb::class) {
             $statement = $this->pdo->query('SELECT SCOPE_IDENTITY()');
