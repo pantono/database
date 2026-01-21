@@ -27,6 +27,11 @@ abstract class AbstractPdoRepository
         return $class::ESCAPE_STRING;
     }
 
+    public function quoteTable(string $table): string
+    {
+        return $this->getQuoteString() . $table . $this->getQuoteString();
+    }
+
     /**
      * @return array<mixed>|null
      */
