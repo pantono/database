@@ -44,10 +44,11 @@ class Update
 
     public function renderQuery(): string
     {
+        $esc = $this->getTableEscapeString();
         $query = 'UPDATE ' . $this->table . ' SET ';
         $updateParts = [];
         foreach ($this->parameters as $name => $value) {
-            $updateParts[] = '`' . $name . '` = :' . $name;
+            $updateParts[] = $esc . $name . $esc . ' = :' . $name;
             $this->computedParams[':' . $name] = $value;
         }
         $query .= implode(', ', $updateParts);
@@ -122,15 +123,6 @@ class Update
 
     public function getTableEscapeString(): string
     {
-        if ($this->driverClass === MssqlDb::class) {
-            return MssqlDb::ESCAPE_STRING;
-        }
-        if ($this->driverClass === MysqlDb::class) {
-            return MysqlDb::ESCAPE_STRING;
-        }
-        if ($this->driverClass === PgsqlDb::class) {
-            return PgsqlDb::ESCAPE_STRING;
-        }
-        return '';
+        return constant($this->driverClass . '::ESCAPE_STRING') ?? '';
     }
 }

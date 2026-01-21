@@ -68,6 +68,7 @@ class Delete
 
     private function formatInput(string|int $key, string|int|array $value): string
     {
+        $esc = $this->getTableEscapeString();
         if (is_int($key)) {
             $queryPart = $value;
             $values = '';
@@ -102,6 +103,11 @@ class Delete
         if ($pos !== false) {
             $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
         }
-        return '`' . $column . '` ' . $operand . ' ' . $parameter;
+        return $esc . $column . $esc . ' ' . $operand . ' ' . $parameter;
+    }
+
+    public function getTableEscapeString(): string
+    {
+        return constant($this->driverClass . '::ESCAPE_STRING') ?? '';
     }
 }
