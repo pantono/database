@@ -21,6 +21,12 @@ abstract class AbstractPdoRepository
         return $this->db;
     }
 
+    public function getQuoteString(): string
+    {
+        $class = get_class($this->getDb());
+        return $class::ESCAPE_STRING;
+    }
+
     /**
      * @return array<mixed>|null
      */
