@@ -9,6 +9,7 @@ trait ReseedIdentityTrait
         if (empty($data)) {
             return;
         }
+        $reseed = false;
         if (isset($data[0][$idColumn])) {
             $reseed = true;
         }
