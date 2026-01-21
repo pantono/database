@@ -20,4 +20,9 @@ class MysqlDb extends Db
     {
         return self::ESCAPE_STRING . $table . self::ESCAPE_STRING;
     }
+
+    public function foreignKeyChecks(bool $enabled): void
+    {
+        $this->query('SET FOREIGN_KEY_CHECKS = ' . ($enabled ? '1' : '0'));
+    }
 }

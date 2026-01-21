@@ -255,4 +255,6 @@ abstract class Db
     }
 
     abstract public function quoteTable(string $table): string;
+
+    abstract public function foreignKeyChecks(bool $enabled): void;
 }

@@ -19,4 +19,13 @@ class PgsqlDb extends Db
     {
         return self::ESCAPE_STRING . $table . self::ESCAPE_STRING;
     }
+
+    public function foreignKeyChecks(bool $enabled): void
+    {
+        if ($enabled === false) {
+            $this->query('SET session_replication_role = replica;');
+            return;
+        }
+        $this->query('SET session_replication_role = DEFAULT;');
+    }
 }
