@@ -65,7 +65,7 @@ abstract class Db
     public function update(string $table, array $parameters, array $where): int
     {
         $this->checkConnection();
-        $query = new Update($table, $parameters, $where);
+        $query = new Update($table, $parameters, $where, $this->getDriverClass());
         $statement = $this->pdo->prepare($query->renderQuery());
 
         $statement->execute($query->getComputedParams());

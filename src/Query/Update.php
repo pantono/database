@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Pantono\Database\Query;
 
 use Pantono\Database\Traits\QueryBuilderTraits;
+use Pantono\Database\Adapter\MssqlDb;
+use Pantono\Database\Adapter\MysqlDb;
+use Pantono\Database\Adapter\PgsqlDb;
 
 class Update
 {
@@ -25,16 +28,18 @@ class Update
      * @var array<int|string,mixed>
      */
     private array $computedParams = [];
+    private string $driverClass;
 
     /**
      * @param array<string,mixed> $parameters
      * @param array<string,string|int|array> $where
      */
-    public function __construct(string $table, array $parameters, array $where = [])
+    public function __construct(string $table, array $parameters, array $where = [], string $driverClass = '')
     {
         $this->table = $table;
         $this->parameters = $parameters;
         $this->where = $where;
+        $this->driverClass = $driverClass;
     }
 
     public function renderQuery(): string
@@ -77,6 +82,7 @@ class Update
 
     private function formatInput(string|int $key, string|int|array $value): string
     {
+        $esc = $this->getTableEscapeString();
         if (is_int($key)) {
             $queryPart = $value;
             $values = '';
@@ -111,6 +117,20 @@ class Update
         if ($pos !== false) {
             $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
         }
-        return '`' . $column . '` ' . $operand . ' ' . $parameter;
+        return $esc . $column . $esc . ' ' . $operand . ' ' . $parameter;
+    }
+
+    public function getTableEscapeString(): string
+    {
+        if ($this->driverClass === MssqlDb::class) {
+            return MssqlDb::ESCAPE_STRING;
+        }
+        if ($this->driverClass === MysqlDb::class) {
+            return MysqlDb::ESCAPE_STRING;
+        }
+        if ($this->driverClass === PgsqlDb::class) {
+            return PgsqlDb::ESCAPE_STRING;
+        }
+        return '';
     }
 }
