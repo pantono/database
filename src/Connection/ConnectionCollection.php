@@ -18,7 +18,7 @@ class ConnectionCollection
      */
     private array $connections = [];
 
-    public function addConnection(string $name, string $type, Db $db): void
+    public function addConnection(string $name, string $type, Db $db, bool $default = false): void
     {
         if ($type === 'mysql') {
             $parentRepository = MysqlRepository::class;
@@ -32,7 +32,8 @@ class ConnectionCollection
         $this->connections[$name] = [
             'parent' => $parentRepository,
             'type' => $type,
-            'connection' => $db
+            'connection' => $db,
+            'default' => $default
         ];
     }
 
@@ -50,6 +51,11 @@ class ConnectionCollection
     {
         if (empty($this->connections)) {
             throw new \RuntimeException('No connection registered for type');
+        }
+        foreach ($this->connections as $connection) {
+            if ($connection['default']) {
+                return $connection['connection'];
+            }
         }
         $keys = array_keys($this->connections);
         return $this->connections[$keys[0]]['connection'];
