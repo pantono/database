@@ -4,7 +4,7 @@ namespace Pantono\Database\Migration\Traits;
 
 trait ReseedIdentityTrait
 {
-    private function saveData(string $table, array $data, string $idColumn = 'id'): void
+    protected function saveData(string $table, array $data, string $idColumn = 'id'): void
     {
         if (empty($data)) {
             return;
@@ -19,7 +19,7 @@ trait ReseedIdentityTrait
         }
     }
 
-    private function reseedIdentity(string $table, string $column = 'id')
+    protected function reseedIdentity(string $table, string $column = 'id')
     {
         $adapter = $this->getAdapter()->getAdapterType();
 
