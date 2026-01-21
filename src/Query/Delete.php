@@ -21,19 +21,22 @@ class Delete
      * @var array<mixed>
      */
     private array $computedParams = [];
+    private string $driverClass;
 
     /**
      * @param array<mixed> $where
      */
-    public function __construct(string $table, array $where)
+    public function __construct(string $table, array $where, string $driverClass)
     {
         $this->table = $table;
         $this->where = $where;
+        $this->driverClass = $driverClass;
     }
 
     public function renderQuery(): string
     {
-        $query = 'DELETE FROM `' . $this->table . '`';
+        $esc = constant($this->driverClass . '::ESCAPE_STRING');
+        $query = 'DELETE FROM ' . $esc . $this->table . $esc;
         if (!empty($this->where)) {
             $query .= ' WHERE ';
             $whereParts = [];

@@ -83,7 +83,7 @@ abstract class Db
     public function delete(string $table, array $parameters): int
     {
         $this->checkConnection();
-        $query = new Delete($table, $parameters);
+        $query = new Delete($table, $parameters, $this->getDriverClass());
         $statement = $this->pdo->prepare($query->renderQuery());
 
         $statement->execute($query->getComputedParams());
