@@ -32,7 +32,7 @@ abstract class AbstractPdoRepository
         return $this->getQuoteString() . $table . $this->getQuoteString() . '.' . $this->getQuoteString() . $column . $this->getQuoteString();
     }
 
-    public function concat(array $parts): string
+    public function concat(array $parts, ?string $as = null): string
     {
         $concat = 'CONCAT(';
         $quotedParts = [];
@@ -45,6 +45,9 @@ abstract class AbstractPdoRepository
             $quotedParts[] = $this->quoteTable($part);
         }
         $concat .= implode(',', $quotedParts) . ')';
+        if ($as) {
+            return $concat . ' as ' . $this->getQuoteString() . $as . $this->getQuoteString();
+        }
         return $concat;
     }
 
