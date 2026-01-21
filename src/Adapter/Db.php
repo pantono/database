@@ -10,7 +10,6 @@ use Pantono\Database\Query\Delete;
 use Pantono\Database\Query\Insert;
 use Pantono\Database\Query\Select\Select;
 use Pantono\Database\Query\Update;
-use Pdo\Pgsql;
 
 abstract class Db
 {
@@ -42,7 +41,7 @@ abstract class Db
     private function getDriverClass(): string
     {
         if (str_starts_with($this->dsn, 'pgsql')) {
-            return Pgsql::class;
+            return PgsqlDb::class;
         }
         if (str_starts_with($this->dsn, 'mssql')) {
             return MssqlDb::class;
