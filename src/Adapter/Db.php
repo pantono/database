@@ -184,9 +184,20 @@ abstract class Db
         return $statement->execute($parameters);
     }
 
-    public function lastInsertId(?string $table = null): false|string|int
+    public function lastInsertId(?string $table = null, ?string $primaryKey = null): false|string|int|null
     {
         $this->checkConnection();
+        $driver = $this->getDriverClass();
+        if ($driver === PgsqlDb::class && $table !== null) {
+            return $this->pdo->lastInsertId($table . '_' . ($primaryKey ?? 'id') . '_seq');
+        }
+        if ($driver === MssqlDb::class) {
+            $statement = $this->pdo->query('SELECT SCOPE_IDENTITY()');
+            if (!$statement) {
+                return false;
+            }
+            return $statement->fetchColumn();
+        }
         if ($table) {
             return $this->pdo->lastInsertId($this->quoteTable($table));
         }

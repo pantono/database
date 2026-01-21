@@ -139,7 +139,7 @@ abstract class AbstractPdoRepository
                 $data
             );
 
-            return intval($this->getDb()->lastInsertId($table));
+            return intval($this->getDb()->lastInsertId($table, $idColumn));
         }
 
         $this->getDb()->update($table, $data, [$idColumn . '=?' => $id]);
@@ -164,14 +164,14 @@ abstract class AbstractPdoRepository
     /**
      * @param array<string,mixed> $data
      */
-    public function insert(string $table, array $data): int
+    public function insert(string $table, array $data, string $idColumn = 'id'): int
     {
         $this->getDb()->insert(
             $table,
             $data
         );
 
-        return intval($this->getDb()->lastInsertId($table));
+        return intval($this->getDb()->lastInsertId($table, $idColumn));
     }
 
     /**

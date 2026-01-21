@@ -17,6 +17,7 @@ abstract class DefaultRepository extends AbstractPdoRepository
             $query = $insert->renderQuery();
             $query .= ' ON CONFLICT DO NOTHING';
             $this->getDb()->runQuery($query, $insert->getParameters());
+            return;
         }
         if (get_class($this->getDb()) === MysqlDb::class) {
             $insert = new Insert($table, $data, MysqlDb::class);
@@ -25,6 +26,7 @@ abstract class DefaultRepository extends AbstractPdoRepository
                 $query = 'INSERT IGNORE INTO ' . substr($query, 11);
             }
             $this->getDb()->runQuery($query, $insert->getParameters());
+            return;
         }
         throw new \RuntimeException('Insert ignore Not implemented in driver');
     }
