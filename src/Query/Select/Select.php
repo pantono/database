@@ -267,6 +267,7 @@ class Select
 
     protected function renderJoin(Join $join): string
     {
+        $esc = $this->getTableEscapeString();
         if ($join->getType() === 'left') {
             $joinStr = ' LEFT ';
         } elseif ($join->getType() === 'right') {
@@ -279,7 +280,7 @@ class Select
         if ($join->getTable() instanceof Select) {
             $joinStr .= 'JOIN (' . $join->getTable() . ')';
         } else {
-            $joinStr .= 'JOIN ' . $join->getTable();
+            $joinStr .= 'JOIN ' . $esc . $join->getTable() . $esc;
         }
         if ($join->getAlias()) {
             $joinStr .= ' as ' . $join->getAlias() . ' ';
