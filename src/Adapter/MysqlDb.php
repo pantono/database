@@ -13,6 +13,6 @@ class MysqlDb extends Db
 
     public function select(): MysqlSelect
     {
-        return new MysqlSelect();
+        return new MysqlSelect(MysqlDb::class);
     }
 }

@@ -20,7 +20,7 @@ abstract class MysqlRepository extends AbstractPdoRepository
 
     public function insertIgnore(string $table, array $data): void
     {
-        $insert = new Insert($table, $data);
+        $insert = new Insert($table, $data, MysqlDb::class);
         $query = $insert->renderQuery();
         if (str_starts_with($query, 'INSERT INTO')) {
             $query = 'INSERT IGNORE INTO ' . substr($query, 11);

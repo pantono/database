@@ -6,6 +6,7 @@ namespace Pantono\Database\Repository;
 
 use Pantono\Database\Adapter\PgsqlDb;
 use Pantono\Database\Query\Insert;
+use Pantono\Database\Adapter\MysqlDb;
 
 abstract class PgsqlRepository extends AbstractPdoRepository
 {
@@ -20,7 +21,7 @@ abstract class PgsqlRepository extends AbstractPdoRepository
 
     public function insertIgnore(string $table, array $data): void
     {
-        $insert = new Insert($table, $data);
+        $insert = new Insert($table, $data, MysqlDb::class);
         $query = $insert->renderQuery();
         $query .= ' ON CONFLICT DO NOTHING';
         $this->getDb()->runQuery($query, $insert->getParameters());
