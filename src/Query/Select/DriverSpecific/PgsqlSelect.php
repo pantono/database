@@ -3,23 +3,13 @@
 namespace Pantono\Database\Query\Select\DriverSpecific;
 
 use Pantono\Database\Query\Select\Select;
+use Pantono\Database\Adapter\PgsqlDb;
 
 class PgsqlSelect extends Select
 {
-    private bool $lockForUpdate = false;
-
-    private bool $lockForShare = false;
-
-    public function setLockForUpdate(bool $value): self
+    public function __construct()
     {
-        $this->lockForUpdate = $value;
-        return $this;
-    }
-
-    public function setLockForShare(bool $value): self
-    {
-        $this->lockForShare = $value;
-        return $this;
+        parent::__construct(PgsqlDb::class);
     }
 
     public function renderQuery(): string

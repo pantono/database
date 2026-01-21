@@ -102,14 +102,15 @@ class Where
         if ($pos !== false) {
             $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
         }
+        $esc = $this->select->getTableEscapeString();
         if ($table) {
             return [
-                'where' => ($hasBracket ? '(' : '') . '`' . $table . '`.`' . $column . '` ' . $operand . ' ' . $parameter,
+                'where' => ($hasBracket ? '(' : '') . $esc . $table . $esc . '.' . $esc . $column . $esc . ' ' . $operand . ' ' . $parameter,
                 'parameters' => $parameters
             ];
         }
         return [
-            'where' => ($hasBracket ? '(' : '') . '`' . $column . '` ' . $operand . ' ' . $parameter,
+            'where' => ($hasBracket ? '(' : '') . $esc . $column . $esc . ' ' . $operand . ' ' . $parameter,
             'parameters' => $parameters
         ];
     }

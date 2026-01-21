@@ -9,6 +9,8 @@ use Pantono\Database\Query\Select\DriverSpecific\MssqlSelect;
 
 class MssqlDb extends Db
 {
+    public const string ESCAPE_STRING = '[';
+
     public function select(): MssqlSelect
     {
         return new MssqlSelect();

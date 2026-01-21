@@ -9,6 +9,8 @@ use Pantono\Database\Query\Select\DriverSpecific\MysqlSelect;
 
 class MysqlDb extends Db
 {
+    public const string ESCAPE_STRING = '`';
+
     public function select(): MysqlSelect
     {
         return new MysqlSelect();

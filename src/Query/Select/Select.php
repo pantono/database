@@ -7,6 +7,10 @@ namespace Pantono\Database\Query\Select;
 use Doctrine\SqlFormatter\SqlFormatter;
 use Pantono\Database\Query\Select\Parts\Join;
 use Pantono\Database\Query\Select\Parts\Where;
+use Pantono\Database\Adapter\MssqlDb;
+use Pantono\Database\Adapter\MysqlDb;
+use Pdo\Mysql;
+use Pantono\Database\Adapter\PgsqlDb;
 
 class Select
 {
@@ -55,10 +59,25 @@ class Select
     protected bool $lockForUpdate = false;
 
     protected bool $lockForShare = false;
+    private string $driverClass;
 
-    public function __construct()
+    public function __construct(string $driverClass)
     {
         $this->uniqueId = uniqid();
+        $this->driverClass = $driverClass;
+    }
+
+    public function getTableEscapeString()
+    {
+        if ($this->driverClass === MssqlDb::class) {
+            return MssqlDb::ESCAPE_STRING;
+        }
+        if ($this->driverClass === MysqlDb::class) {
+            return MysqlDb::ESCAPE_STRING;
+        }
+        if ($this->driverClass === PgsqlDb::class) {
+            return PgsqlDb::ESCAPE_STRING;
+        }
     }
 
     /**

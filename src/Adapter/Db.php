@@ -10,6 +10,7 @@ use Pantono\Database\Query\Delete;
 use Pantono\Database\Query\Insert;
 use Pantono\Database\Query\Select\Select;
 use Pantono\Database\Query\Update;
+use Pdo\Pgsql;
 
 abstract class Db
 {
@@ -40,7 +41,13 @@ abstract class Db
 
     public function select(): Select
     {
-        return new Select();
+        if (str_starts_with($this->dsn, 'pgsql')) {
+            return new Select(Pgsql::class);
+        }
+        if (str_starts_with($this->dsn, 'mssql')) {
+            return new Select(MssqlDb::class);
+        }
+        return new Select(MysqlDb::class);
     }
 
     /**

@@ -6,9 +6,15 @@ namespace Pantono\Database\Query\Select\DriverSpecific;
 
 use Pantono\Database\Query\Select\Select;
 use Pantono\Database\Exception\InvalidQueryException;
+use Pantono\Database\Adapter\MysqlDb;
 
 class MssqlSelect extends Select
 {
+    public function __construct()
+    {
+        parent::__construct(MysqlDb::class);
+    }
+
     public function renderQuery(): string
     {
         $columns = [];

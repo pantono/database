@@ -13,7 +13,7 @@ class PgsqlQuerySelectTest extends TestCase
     {
         $select = (new PgsqlSelect())->from('table')->where('test_column = ?', 'test');
 
-        $this->assertEqualsIgnoringCase('SELECT table.* FROM table WHERE `test_column` = \'test\'', (string)$select);
+        $this->assertEqualsIgnoringCase('SELECT table.* FROM table WHERE "test_column" = \'test\'', (string)$select);
     }
 
     public function testLimitPgsql(): void
