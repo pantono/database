@@ -45,7 +45,7 @@ class Update
     public function renderQuery(): string
     {
         $esc = $this->getTableEscapeString();
-        $query = 'UPDATE ' . $this->table . ' SET ';
+        $query = 'UPDATE ' . $esc . $this->table . $esc . ' SET ';
         $updateParts = [];
         foreach ($this->parameters as $name => $value) {
             $updateParts[] = $esc . $name . $esc . ' = :' . $name;
