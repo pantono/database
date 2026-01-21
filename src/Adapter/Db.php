@@ -39,15 +39,23 @@ abstract class Db
         $this->options = $options;
     }
 
-    public function select(): Select
+    private function getDriverClass(): string
     {
         if (str_starts_with($this->dsn, 'pgsql')) {
-            return new Select(Pgsql::class);
+            return Pgsql::class;
         }
         if (str_starts_with($this->dsn, 'mssql')) {
-            return new Select(MssqlDb::class);
+            return MssqlDb::class;
         }
-        return new Select(MysqlDb::class);
+        if (str_starts_with($this->dsn, 'mysql')) {
+            return MysqlDb::class;
+        }
+        throw new \RuntimeException('Invalid database connetion type');
+    }
+
+    public function select(): Select
+    {
+        return new Select($this->getDriverClass());
     }
 
     /**
@@ -89,7 +97,7 @@ abstract class Db
     public function insert(string $table, array $parameters): int
     {
         $this->checkConnection();
-        $query = new Insert($table, $parameters);
+        $query = new Insert($table, $parameters, $this->getDriverClass());
         $statement = $this->pdo->prepare($query->renderQuery());
         $params = $query->getParameters();
         foreach ($params as $parameter => $value) {
