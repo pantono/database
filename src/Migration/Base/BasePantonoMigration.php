@@ -26,4 +26,14 @@ class BasePantonoMigration extends AbstractMigration
 
         return $table;
     }
+
+    public function insertOnCreate(string $tableName, array $data): void
+    {
+        if ($this->isMigratingUp()) {
+            $this->table($tableName)
+                ->insert($data)
+                ->save();
+            $this->reseedIdentity($tableName);
+        }
+    }
 }
