@@ -34,7 +34,7 @@ class MssqlQuerySelectTest extends AbstractMssqlAdapterTestCase
     public function testGroupMssql(): void
     {
         $select = (new MssqlSelect($this->db))->from('table')->order('col1 DESC ')->group('col1');
-        $this->assertEqualsIgnoringCase('SELECT [table].* FROM [table] GROUP BY col1 ORDER BY col1 DESC', (string)$select);
+        $this->assertEqualsIgnoringCase('SELECT [table].* FROM [table] GROUP BY [col1] ORDER BY [col1] DESC', (string)$select);
     }
 
     public function testMultiJoinQueryMssql(): void
@@ -53,7 +53,7 @@ class MssqlQuerySelectTest extends AbstractMssqlAdapterTestCase
             'LEFT JOIN [res_table] on res_reservation_table.table_id=res_table.id ' .
             'LEFT JOIN [res_area] on res_reservation_table.area_id=res_area.id ' .
             'LEFT JOIN [res_level] on res_reservation_table.level_id=res_level.id ' .
-            'LEFT JOIN [res_level] as area_level on res_area.level_id=area_level.id ORDER BY start_time',
+            'LEFT JOIN [res_level] as area_level on res_area.level_id=area_level.id ORDER BY [start_time]',
             (string)$select
         );
     }
@@ -74,7 +74,7 @@ class MssqlQuerySelectTest extends AbstractMssqlAdapterTestCase
     public function testLimitPage(): void
     {
         $select = (new MssqlSelect($this->db))->from('table')->joinInner('joined_table', 'joined_table.id=table.join_id', ['id'])->where('test_column = ?', 'test')->order('id')->limitPage(2, 10);
-        $this->assertEqualsIgnoringCase('SELECT [table].*, [joined_table].[id] FROM [table] INNER JOIN [joined_table] on joined_table.id=table.join_id WHERE [test_column] = \'test\' ORDER BY id OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY', (string)$select);
+        $this->assertEqualsIgnoringCase('SELECT [table].*, [joined_table].[id] FROM [table] INNER JOIN [joined_table] on joined_table.id=table.join_id WHERE [test_column] = \'test\' ORDER BY [id] OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY', (string)$select);
     }
 
 //    public function testOrderBy(): void

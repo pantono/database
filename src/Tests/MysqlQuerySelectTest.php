@@ -52,13 +52,13 @@ class MysqlQuerySelectTest extends AbstractMysqlAdapterTestCase
     public function testOrderBy(): void
     {
         $select = (new Select($this->db))->from('table')->order('col1');
-        $this->assertEqualsIgnoringCase('SELECT `table`.* FROM `table` ORDER BY col1', (string)$select);
+        $this->assertEqualsIgnoringCase('SELECT `table`.* FROM `table` ORDER BY `col1`', (string)$select);
     }
 
     public function testGroup(): void
     {
         $select = (new Select($this->db))->from('table')->order('col1 DESC ')->group('col1');
-        $this->assertEqualsIgnoringCase('SELECT `table`.* FROM `table` GROUP BY col1 ORDER BY col1 DESC', (string)$select);
+        $this->assertEqualsIgnoringCase('SELECT `table`.* FROM `table` GROUP BY `col1` ORDER BY `col1` DESC', (string)$select);
     }
 
     public function testMultiJoinQueryMysql(): void
@@ -77,7 +77,7 @@ class MysqlQuerySelectTest extends AbstractMysqlAdapterTestCase
             'LEFT JOIN `res_table` ON res_reservation_table.table_id=res_table.id ' .
             'LEFT JOIN `res_area` ON res_reservation_table.area_id=res_area.id ' .
             'LEFT JOIN `res_level` ON res_reservation_table.level_id=res_level.id ' .
-            'LEFT JOIN `res_level` AS area_level ON res_area.level_id=area_level.id ORDER BY start_time',
+            'LEFT JOIN `res_level` AS area_level ON res_area.level_id=area_level.id ORDER BY `start_time`',
             (string)$select
         );
     }

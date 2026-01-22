@@ -164,13 +164,35 @@ class Select
 
     public function order(string $condition): self
     {
-        $this->order[] = $condition;
+        if (preg_match('/^([\w.]+)\s*(asc|desc)?$/i', trim($condition), $matches)) {
+            $column = $matches[1];
+            $direction = $matches[2] ?? '';
+            if (str_contains($column, '.')) {
+                [$table, $col] = explode('.', $column, 2);
+                $condition = $this->quoteColumn($table, $col);
+            } else {
+                $condition = $this->quoteTable($column);
+            }
+            if ($direction) {
+                $condition .= ' ' . strtoupper($direction);
+            }
+            $this->order[] = $condition;
+        }
         return $this;
     }
 
     public function group(string $spec): self
     {
-        $this->group[] = $spec;
+        if (preg_match('/^([\w.]+)$/', trim($spec), $matches)) {
+            $column = $matches[1];
+            if (str_contains($column, '.')) {
+                [$table, $col] = explode('.', $column, 2);
+                $spec = $this->quoteColumn($table, $col);
+            } else {
+                $spec = $this->quoteTable($column);
+            }
+            $this->group[] = $spec;
+        }
         return $this;
     }
 
