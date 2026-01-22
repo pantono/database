@@ -13,14 +13,14 @@ abstract class DefaultRepository extends AbstractPdoRepository
     public function insertIgnore(string $table, array $data): void
     {
         if (get_class($this->getDb()) === PgsqlDb::class) {
-            $insert = new Insert($table, $data, PgsqlDb::class);
+            $insert = new Insert($table, $data, $this->db);
             $query = $insert->renderQuery();
             $query .= ' ON CONFLICT DO NOTHING';
             $this->getDb()->runQuery($query, $insert->getParameters());
             return;
         }
         if (get_class($this->getDb()) === MysqlDb::class) {
-            $insert = new Insert($table, $data, MysqlDb::class);
+            $insert = new Insert($table, $data, $this->db);
             $query = $insert->renderQuery();
             if (str_starts_with($query, 'INSERT INTO')) {
                 $query = 'INSERT IGNORE INTO ' . substr($query, 11);

@@ -8,6 +8,7 @@ use Pantono\Database\Traits\QueryBuilderTraits;
 use Pantono\Database\Adapter\MssqlDb;
 use Pantono\Database\Adapter\MysqlDb;
 use Pantono\Database\Adapter\PgsqlDb;
+use Pantono\Database\Adapter\Db;
 
 class Insert
 {
@@ -18,28 +19,24 @@ class Insert
      * @var array<mixed>
      */
     private array $parameters;
-    /**
-     * @var string
-     */
-    private string $driverClass;
+    private Db $adapter;
 
     /**
      * @param array<mixed> $parameters
      */
-    public function __construct(string $table, array $parameters, string $driverClass)
+    public function __construct(string $table, array $parameters, Db $adapter)
     {
         $this->table = $table;
         $this->parameters = $parameters;
-        $this->driverClass = $driverClass;
+        $this->adapter = $adapter;
     }
 
     public function renderQuery(): string
     {
-        $esc = $this->getTableEscapeString();
-        $query = 'INSERT INTO ' . $esc . $this->table . $esc . ' (';
+        $query = 'INSERT INTO ' . $this->adapter->quoteTable($this->table) . ' (';
         $columNames = [];
         foreach ($this->parameters as $name => $value) {
-            $columNames[] = $esc . $name . $esc;
+            $columNames[] = $this->adapter->quoteTable($name);
         }
         $query .= implode(', ', $columNames);
         $query .= ') VALUES (';
@@ -59,19 +56,5 @@ class Insert
     public function getParameters(): array
     {
         return $this->parameters;
-    }
-
-    public function getTableEscapeString(): string
-    {
-        if ($this->driverClass === MssqlDb::class) {
-            return MssqlDb::ESCAPE_STRING;
-        }
-        if ($this->driverClass === MysqlDb::class) {
-            return MysqlDb::ESCAPE_STRING;
-        }
-        if ($this->driverClass === PgsqlDb::class) {
-            return PgsqlDb::ESCAPE_STRING;
-        }
-        return '';
     }
 }

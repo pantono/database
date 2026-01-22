@@ -6,6 +6,7 @@ namespace Pantono\Database\Query\Select\Parts;
 
 use Pantono\Database\Query\Select\Select;
 use Pantono\Database\Traits\QueryBuilderTraits;
+use Pantono\Database\Exception\InvalidQueryException;
 
 class Where
 {
@@ -102,15 +103,17 @@ class Where
         if ($pos !== false) {
             $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
         }
-        $esc = $this->select->getTableEscapeString();
+        if ($column === null) {
+            throw new InvalidQueryException('Unable to ascertain column');
+        }
         if ($table) {
             return [
-                'where' => ($hasBracket ? '(' : '') . $esc . $table . $esc . '.' . $esc . $column . $esc . ' ' . $operand . ' ' . $parameter,
+                'where' => ($hasBracket ? '(' : '') . $this->select->quoteColumn($table, $column) . ' ' . $operand . ' ' . $parameter,
                 'parameters' => $parameters
             ];
         }
         return [
-            'where' => ($hasBracket ? '(' : '') . $esc . $column . $esc . ' ' . $operand . ' ' . $parameter,
+            'where' => ($hasBracket ? '(' : '') . $this->select->quoteTable($column) . ' ' . $operand . ' ' . $parameter,
             'parameters' => $parameters
         ];
     }

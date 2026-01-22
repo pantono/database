@@ -7,29 +7,32 @@ namespace Pantono\Database\Query\Select\DriverSpecific;
 use Pantono\Database\Query\Select\Select;
 use Pantono\Database\Exception\InvalidQueryException;
 use Pantono\Database\Adapter\MysqlDb;
+use Pantono\Database\Adapter\MssqlDb;
 
 class MssqlSelect extends Select
 {
-    public function __construct()
-    {
-        parent::__construct(MysqlDb::class);
-    }
-
     public function renderQuery(): string
     {
         $columns = [];
         foreach ($this->getColumns() as $column) {
-            $columns[] = $column['table'] . '.' . $column['column'];
+            $columns[] = $this->quoteColumn($column['table'], $column['column']);
         }
         $select = 'SELECT ';
         if ($this->limit && !$this->offset) {
             $select .= 'TOP ' . $this->limit . ' ';
         }
         $select .= implode(', ', $columns);
-        if ($this->alias) {
-            $select .= ' FROM ' . $this->table . ' as ' . $this->alias;
+        if ($this->table instanceof Select) {
+            $select .= ' FROM (' . $this->table->renderQuery() . ') as ' . $this->alias;
+            foreach ($this->table->getParameters() as $name => $parameter) {
+                $this->setParameter($name, $parameter);
+            }
         } else {
-            $select .= ' FROM ' . $this->table;
+            if ($this->alias) {
+                $select .= ' FROM ' . $this->quoteTable($this->table) . ' as ' . $this->alias;
+            } else {
+                $select .= ' FROM ' . $this->quoteTable($this->table);
+            }
         }
         if ($this->lockForShare) {
             $select .= ' WITH (HOLDLOCK, ROWLOCK) ';

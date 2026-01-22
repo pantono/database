@@ -14,7 +14,7 @@ use Pantono\Database\Query\Update;
 abstract class Db
 {
     private bool $connected = false;
-    private PDO $pdo;
+    protected PDO $pdo;
     private string $dsn;
     private string $user;
     private string $pass;
@@ -38,23 +38,9 @@ abstract class Db
         $this->options = $options;
     }
 
-    private function getDriverClass(): string
-    {
-        if (str_starts_with($this->dsn, 'pgsql')) {
-            return PgsqlDb::class;
-        }
-        if (str_starts_with($this->dsn, 'mssql')) {
-            return MssqlDb::class;
-        }
-        if (str_starts_with($this->dsn, 'mysql')) {
-            return MysqlDb::class;
-        }
-        throw new \RuntimeException('Invalid database connetion type');
-    }
-
     public function select(): Select
     {
-        return new Select($this->getDriverClass());
+        return new Select($this);
     }
 
     /**
@@ -64,7 +50,7 @@ abstract class Db
     public function update(string $table, array $parameters, array $where): int
     {
         $this->checkConnection();
-        $query = new Update($table, $parameters, $where, $this->getDriverClass());
+        $query = new Update($table, $parameters, $where, $this);
         $statement = $this->pdo->prepare($query->renderQuery());
 
         $statement->execute($query->getComputedParams());
@@ -83,7 +69,7 @@ abstract class Db
     public function delete(string $table, array $parameters): int
     {
         $this->checkConnection();
-        $query = new Delete($table, $parameters, $this->getDriverClass());
+        $query = new Delete($table, $parameters, $this);
         $statement = $this->pdo->prepare($query->renderQuery());
 
         $statement->execute($query->getComputedParams());
@@ -96,7 +82,7 @@ abstract class Db
     public function insert(string $table, array $parameters): int
     {
         $this->checkConnection();
-        $query = new Insert($table, $parameters, $this->getDriverClass());
+        $query = new Insert($table, $parameters, $this);
         $statement = $this->pdo->prepare($query->renderQuery());
         $params = $query->getParameters();
         foreach ($params as $parameter => $value) {
@@ -184,32 +170,7 @@ abstract class Db
         return $statement->execute($parameters);
     }
 
-    public function lastInsertId(?string $table = null, ?string $primaryKey = null): false|string|int|null
-    {
-        $this->checkConnection();
-        $driver = $this->getDriverClass();
-        if ($driver === PgsqlDb::class && $table !== null) {
-            $sequenceName = $table . '_' . ($primaryKey ?? 'id') . '_seq';
-            $check = $this->pdo->prepare("SELECT 1 FROM pg_class WHERE relkind = 'S' AND relname = ?");
-            $check->execute([$sequenceName]);
-            if ($check->fetchColumn()) {
-                return $this->pdo->lastInsertId($sequenceName);
-            }
-            return null;
-        }
-        if ($driver === MssqlDb::class) {
-            $statement = $this->pdo->query('SELECT SCOPE_IDENTITY()');
-            if (!$statement) {
-                return false;
-            }
-            return $statement->fetchColumn();
-        }
-        if ($table) {
-            return $this->pdo->lastInsertId($this->quoteTable($table));
-        }
-
-        return $this->pdo->lastInsertId();
-    }
+    abstract public function lastInsertId(?string $table = null, ?string $primaryKey = null): false|string|int|null;
 
     public function beginTransaction(): void
     {
@@ -252,7 +213,7 @@ abstract class Db
         } while (true);
     }
 
-    private function checkConnection(): void
+    protected function checkConnection(): void
     {
         if ($this->connected === false) {
             $this->pdo = new PDO($this->dsn, $this->user, $this->pass, $this->options);
@@ -260,7 +221,9 @@ abstract class Db
         }
     }
 
+    abstract public function foreignKeyChecks(bool $enabled): void;
+
     abstract public function quoteTable(string $table): string;
 
-    abstract public function foreignKeyChecks(bool $enabled): void;
+    abstract public function quoteColumn(string $table, ?string $column = null): string;
 }

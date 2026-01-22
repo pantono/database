@@ -11,6 +11,7 @@ use Pantono\Database\Adapter\MssqlDb;
 use Pantono\Database\Adapter\MysqlDb;
 use Pdo\Mysql;
 use Pantono\Database\Adapter\PgsqlDb;
+use Pantono\Database\Adapter\Db;
 
 class Select
 {
@@ -59,26 +60,22 @@ class Select
     protected bool $lockForUpdate = false;
 
     protected bool $lockForShare = false;
-    private string $driverClass;
+    private Db $adapter;
 
-    public function __construct(string $driverClass)
+    public function __construct(Db $adapter)
     {
         $this->uniqueId = uniqid();
-        $this->driverClass = $driverClass;
+        $this->adapter = $adapter;
     }
 
-    public function getTableEscapeString(): string
+    public function quoteTable(string $table): string
     {
-        if ($this->driverClass === MssqlDb::class) {
-            return MssqlDb::ESCAPE_STRING;
-        }
-        if ($this->driverClass === MysqlDb::class) {
-            return MysqlDb::ESCAPE_STRING;
-        }
-        if ($this->driverClass === PgsqlDb::class) {
-            return PgsqlDb::ESCAPE_STRING;
-        }
-        return '';
+        return $this->adapter->quoteTable($table);
+    }
+
+    public function quoteColumn(string $table, ?string $column = null): string
+    {
+        return $this->adapter->quoteColumn($table, $column);
     }
 
     /**
@@ -267,7 +264,6 @@ class Select
 
     protected function renderJoin(Join $join): string
     {
-        $esc = $this->getTableEscapeString();
         if ($join->getType() === 'left') {
             $joinStr = ' LEFT ';
         } elseif ($join->getType() === 'right') {
@@ -280,7 +276,7 @@ class Select
         if ($join->getTable() instanceof Select) {
             $joinStr .= 'JOIN (' . $join->getTable() . ')';
         } else {
-            $joinStr .= 'JOIN ' . $esc . $join->getTable() . $esc;
+            $joinStr .= 'JOIN ' . $this->quoteTable($join->getTable());
         }
         if ($join->getAlias()) {
             $joinStr .= ' as ' . $join->getAlias() . ' ';
@@ -365,7 +361,7 @@ class Select
         $columns = [];
         foreach ($this->getColumns() as $column) {
             if ($column['table'] !== null) {
-                $columns[] = $column['table'] . '.' . $column['column'];
+                $columns[] = $this->quoteColumn($column['table'], $column['column']);
             } else {
                 $columns[] = $column['column'];
             }
@@ -377,7 +373,7 @@ class Select
                 $this->setParameter($name, $parameter);
             }
         } else {
-            $select .= ' FROM ' . $this->table;
+            $select .= ' FROM ' . $this->quoteTable($this->table);
         }
         if (!empty($this->joins)) {
             foreach ($this->joins as $join) {

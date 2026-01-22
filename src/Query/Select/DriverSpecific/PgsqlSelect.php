@@ -3,22 +3,21 @@
 namespace Pantono\Database\Query\Select\DriverSpecific;
 
 use Pantono\Database\Query\Select\Select;
-use Pantono\Database\Adapter\PgsqlDb;
+use Pantono\Database\Adapter\Db;
 
 class PgsqlSelect extends Select
 {
-    public function __construct()
+    public function __construct(Db $adapter)
     {
-        parent::__construct(PgsqlDb::class);
+        parent::__construct($adapter);
     }
 
     public function renderQuery(): string
     {
         $columns = [];
-        $esc = $this->getTableEscapeString();
         foreach ($this->getColumns() as $column) {
             if ($column['table'] !== null) {
-                $columns[] = $esc . $column['table'] . $esc . '.' . $column['column'];
+                $columns[] = $this->quoteColumn($column['table'], $column['column']);
             } else {
                 $columns[] = $column['column'];
             }
@@ -31,9 +30,9 @@ class PgsqlSelect extends Select
             }
         } else {
             if ($this->alias) {
-                $select .= ' FROM ' . $esc . $this->table . $esc . ' as ' . $this->alias;
+                $select .= ' FROM ' . $this->quoteTable($this->table) . ' as ' . $this->alias;
             } else {
-                $select .= ' FROM ' . $esc . $this->table . $esc;
+                $select .= ' FROM ' . $this->quoteTable($this->table);
             }
         }
         if (!empty($this->joins)) {

@@ -8,6 +8,7 @@ use Pantono\Database\Traits\QueryBuilderTraits;
 use Pantono\Database\Adapter\MssqlDb;
 use Pantono\Database\Adapter\MysqlDb;
 use Pantono\Database\Adapter\PgsqlDb;
+use Pantono\Database\Adapter\Db;
 
 class Update
 {
@@ -28,27 +29,26 @@ class Update
      * @var array<int|string,mixed>
      */
     private array $computedParams = [];
-    private string $driverClass;
+    private Db $adapter;
 
     /**
      * @param array<string,mixed> $parameters
      * @param array<string,string|int|array> $where
      */
-    public function __construct(string $table, array $parameters, array $where = [], string $driverClass = '')
+    public function __construct(string $table, array $parameters, array $where, Db $adapter)
     {
         $this->table = $table;
         $this->parameters = $parameters;
         $this->where = $where;
-        $this->driverClass = $driverClass;
+        $this->adapter = $adapter;
     }
 
     public function renderQuery(): string
     {
-        $esc = $this->getTableEscapeString();
-        $query = 'UPDATE ' . $esc . $this->table . $esc . ' SET ';
+        $query = 'UPDATE ' . $this->adapter->quoteTable($this->table) . ' SET ';
         $updateParts = [];
         foreach ($this->parameters as $name => $value) {
-            $updateParts[] = $esc . $name . $esc . ' = :' . $name;
+            $updateParts[] = $this->adapter->quoteTable($name) . ' = :' . $name;
             $this->computedParams[':' . $name] = $value;
         }
         $query .= implode(', ', $updateParts);
@@ -83,7 +83,6 @@ class Update
 
     private function formatInput(string|int $key, string|int|array $value): string
     {
-        $esc = $this->getTableEscapeString();
         if (is_int($key)) {
             $queryPart = $value;
             $values = '';
@@ -118,11 +117,12 @@ class Update
         if ($pos !== false) {
             $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
         }
-        return $esc . $column . $esc . ' ' . $operand . ' ' . $parameter;
-    }
-
-    public function getTableEscapeString(): string
-    {
-        return constant($this->driverClass . '::ESCAPE_STRING') ?? '';
+        if (is_string($column) && str_contains($column, '.')) {
+            [$table, $column] = explode('.', $column, 2);
+            $column = $this->adapter->quoteColumn($table, $column);
+        } elseif (is_string($column)) {
+            $column = $this->adapter->quoteTable($column);
+        }
+        return $column . ' ' . $operand . ' ' . $parameter;
     }
 }

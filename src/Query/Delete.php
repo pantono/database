@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pantono\Database\Query;
 
 use Pantono\Database\Traits\QueryBuilderTraits;
+use Pantono\Database\Adapter\Db;
 
 class Delete
 {
@@ -21,22 +22,21 @@ class Delete
      * @var array<mixed>
      */
     private array $computedParams = [];
-    private string $driverClass;
+    private Db $adapter;
 
     /**
      * @param array<mixed> $where
      */
-    public function __construct(string $table, array $where, string $driverClass)
+    public function __construct(string $table, array $where, Db $adapter)
     {
         $this->table = $table;
         $this->where = $where;
-        $this->driverClass = $driverClass;
+        $this->adapter = $adapter;
     }
 
     public function renderQuery(): string
     {
-        $esc = constant($this->driverClass . '::ESCAPE_STRING');
-        $query = 'DELETE FROM ' . $esc . $this->table . $esc;
+        $query = 'DELETE FROM ' . $this->adapter->quoteTable($this->table);
         if (!empty($this->where)) {
             $query .= ' WHERE ';
             $whereParts = [];
@@ -68,7 +68,6 @@ class Delete
 
     private function formatInput(string|int $key, string|int|array $value): string
     {
-        $esc = $this->getTableEscapeString();
         if (is_int($key)) {
             $queryPart = $value;
             $values = '';
@@ -103,11 +102,12 @@ class Delete
         if ($pos !== false) {
             $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
         }
-        return $esc . $column . $esc . ' ' . $operand . ' ' . $parameter;
-    }
-
-    public function getTableEscapeString(): string
-    {
-        return constant($this->driverClass . '::ESCAPE_STRING') ?? '';
+        if (is_string($column) && str_contains($column, '.')) {
+            [$table, $column] = explode('.', $column, 2);
+            $column = $this->adapter->quoteColumn($table, $column);
+        } elseif (is_string($column)) {
+            $column = $this->adapter->quoteTable($column);
+        }
+        return $column . ' ' . $operand . ' ' . $parameter;
     }
 }

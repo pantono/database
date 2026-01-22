@@ -21,7 +21,7 @@ abstract class PgsqlRepository extends AbstractPdoRepository
 
     public function insertIgnore(string $table, array $data): void
     {
-        $insert = new Insert($table, $data, MysqlDb::class);
+        $insert = new Insert($table, $data, $this->db);
         $query = $insert->renderQuery();
         $query .= ' ON CONFLICT DO NOTHING';
         $this->getDb()->runQuery($query, $insert->getParameters());

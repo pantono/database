@@ -19,7 +19,7 @@ trait ReseedIdentityTrait
         }
     }
 
-    protected function reseedIdentity(string $table, string $column = 'id')
+    protected function reseedIdentity(string $table, string $column = 'id'): void
     {
         $adapter = $this->getAdapter()->getAdapterType();
 
