@@ -21,15 +21,9 @@ abstract class AbstractPdoRepository
         return $this->db;
     }
 
-    public function getQuoteString(): string
-    {
-        $class = get_class($this->getDb());
-        return $class::ESCAPE_STRING;
-    }
-
     public function quoteColumn(string $table, string $column): string
     {
-        return $this->getQuoteString() . $table . $this->getQuoteString() . '.' . $this->getQuoteString() . $column . $this->getQuoteString();
+        return $this->db->quoteColumn($table, $column);
     }
 
     public function concat(array $parts, ?string $as = null): string
@@ -46,7 +40,7 @@ abstract class AbstractPdoRepository
         }
         $concat .= implode(',', $quotedParts) . ')';
         if ($as) {
-            return $concat . ' as ' . $this->getQuoteString() . $as . $this->getQuoteString();
+            return $concat . ' as ' . $this->quoteTable($as);
         }
         return $concat;
     }
@@ -54,7 +48,7 @@ abstract class AbstractPdoRepository
 
     public function quoteTable(string $table): string
     {
-        return $this->getQuoteString() . $table . $this->getQuoteString();
+        return $this->db->quoteTable($table);
     }
 
     /**
