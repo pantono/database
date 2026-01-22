@@ -19,7 +19,7 @@ class BasePantonoMigration extends AbstractMigration
             ->addForeignKey($columnName, $linkedTable, $linkedColumn);
     }
 
-    public function table(string $tableName, array $options = []): PhinxTable
+    public function table(string $tableName, array $options = []): Table
     {
         $table = new Table($tableName, $options, $this->getAdapter());
         $this->tables[] = $table;
