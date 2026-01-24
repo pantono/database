@@ -12,6 +12,7 @@ use Pantono\Database\Adapter\MysqlDb;
 use Pdo\Mysql;
 use Pantono\Database\Adapter\PgsqlDb;
 use Pantono\Database\Adapter\Db;
+use Pantono\Database\Query\Select\Parts\Expression;
 
 class Select
 {
@@ -126,7 +127,7 @@ class Select
      * @param array<mixed>|string|null $parameters
      * @return $this
      */
-    public function where(string $query, array|string|null|int $parameters = null): self
+    public function where(string|Expression $query, array|string|null|int $parameters = null): self
     {
         $this->where[] = new Where($query, $parameters, $this);
         return $this;

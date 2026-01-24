@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Pantono\Database\Query\Select\Select;
 use Pantono\Database\Adapter\MysqlDb;
 use Pantono\Database\Tests\BaseCases\AbstractMysqlAdapterTestCase;
+use Pantono\Database\Query\Select\Parts\Expression;
 
 class MysqlQuerySelectTest extends AbstractMysqlAdapterTestCase
 {
@@ -196,5 +197,12 @@ class MysqlQuerySelectTest extends AbstractMysqlAdapterTestCase
 
         $countSelect = (new Select($this->db))->from(['c' => $subSelect], ['COUNT(1) as cnt']);
         $this->assertEqualsIgnoringCase('SELECT COUNT(1) as cnt from (SELECT `t1`.* FROM `t1` WHERE `code` not like :param_1_' . $subSelect->uniqueId . ') as c', $countSelect->renderQuery());
+    }
+
+    public function testFunctionColumns(): void
+    {
+        $select = (new Select($this->db))->from('t1')->where(new Expression('DATE(date) =?'), '2001-01-01');
+
+        $this->assertEqualsIgnoringCase('SELECT `t1`.* FROM `t1` WHERE DATE(date) = \'2001-01-01\'', (string)$select);
     }
 }

@@ -23,7 +23,7 @@ class Where
     /**
      * @param string|array<mixed>|int|null $parameters
      */
-    public function __construct(string $where, string|array|int|null $parameters, Select $select, string $operand = 'and')
+    public function __construct(string|Expression $where, string|array|int|null $parameters, Select $select, string $operand = 'and')
     {
         $this->select = $select;
         $details = $this->convertQuestionMarks($where, $parameters);
@@ -57,12 +57,15 @@ class Where
     /**
      * @return array{where: string, parameters: array<mixed>}
      */
-    private function convertQuestionMarks(string|int $key, string|array|int|null $value): array
+    private function convertQuestionMarks(string|int|Expression $key, string|array|int|null $value): array
     {
         if (is_null($value)) {
             return ['where' => (string)$key, 'parameters' => []];
         }
-        if (is_int($key)) {
+        if ($key instanceof Expression) {
+            $queryPart = $key->getExpression();
+            $values = $value;
+        } elseif (is_int($key)) {
             $queryPart = $value;
             $values = '';
         } else {
@@ -77,32 +80,29 @@ class Where
         if (str_starts_with($queryPart, '(')) {
             $hasBracket = true;
         }
-        /** @var array{column?: string, operand?: string, value?: string} $matches */
+        /** @var array{expression?: string, table?: string, column?: string, operand?: string, value?: string} $matches */
         $matches = [];
+        if (preg_match('/(?<expression>[\w\.]+\(.*\))\s*(?<operand>=|<>|in|not in|>=|<=|!=|>|<|is null|like|between|not like)\s*(?<value>.*)/i', $queryPart, $matches)) {
+            $expression = $matches['expression'];
+            $operand = trim($matches['operand']);
+            $parameter = trim($matches['value']);
+            $parameters = $this->parseParameters($values, $parameter);
+            return [
+                'where' => ($hasBracket ? '(' : '') . $expression . ' ' . $operand . ' ' . $parameters['parameter'],
+                'parameters' => $parameters['parameters']
+            ];
+        }
+
         preg_match('/(?:(?<table>\w+)\.)?(?<column>\w+)\s*(?<operand>=|<>|in|not in|>=|<=|!=|>|<|is null|like|between|not like)\s*(?<value>.*)/i', $queryPart, $matches);
         $column = $matches['column'] ?? null;
         $operand = isset($matches['operand']) ? trim($matches['operand']) : '';
         $parameter = isset($matches['value']) ? trim($matches['value']) : '';
         $table = isset($matches['table']) ? trim($matches['table']) : '';
-        $parameterReplacement = '';
-        $parameters = [];
-        if (is_array($values)) {
-            $parts = [];
-            foreach ($values as $inputValue) {
-                $this->select->parameterIndex++;
-                $parameters[':param_' . $this->select->parameterIndex . '_' . $this->select->uniqueId] = $inputValue;
-                $parts[] = ':param_' . $this->select->parameterIndex . '_' . $this->select->uniqueId;
-            }
-            $parameterReplacement = implode(', ', $parts);
-        } elseif ($values !== '') {
-            $this->select->parameterIndex++;
-            $parameters[':param_' . $this->select->parameterIndex . '_' . $this->select->uniqueId] = $values;
-            $parameter = str_replace('?', ':param_' . $this->select->parameterIndex . '_' . $this->select->uniqueId, $parameter);
-        }
-        $pos = strpos($parameter, '?');
-        if ($pos !== false) {
-            $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
-        }
+
+        $parameters = $this->parseParameters($values, $parameter);
+        $parameter = $parameters['parameter'];
+        $parameters = $parameters['parameters'];
+
         if ($column === null) {
             throw new InvalidQueryException('Unable to ascertain column');
         }
@@ -116,6 +116,35 @@ class Where
             'where' => ($hasBracket ? '(' : '') . $this->select->quoteTable($column) . ' ' . $operand . ' ' . $parameter,
             'parameters' => $parameters
         ];
+    }
+
+    /**
+     * @param string|array<mixed>|int|null $values
+     * @return array{parameter: string, parameters: array<mixed>}
+     */
+    private function parseParameters(string|array|int|null $values, string $parameter): array
+    {
+        $parameterReplacement = '';
+        $parameters = [];
+        if (is_array($values)) {
+            $parts = [];
+            foreach ($values as $inputValue) {
+                $this->select->parameterIndex++;
+                $parameters[':param_' . $this->select->parameterIndex . '_' . $this->select->uniqueId] = $inputValue;
+                $parts[] = ':param_' . $this->select->parameterIndex . '_' . $this->select->uniqueId;
+            }
+            $parameterReplacement = implode(', ', $parts);
+        } elseif ($values !== '' && $values !== null) {
+            $this->select->parameterIndex++;
+            $parameters[':param_' . $this->select->parameterIndex . '_' . $this->select->uniqueId] = $values;
+            $parameter = str_replace('?', ':param_' . $this->select->parameterIndex . '_' . $this->select->uniqueId, $parameter);
+        }
+        $pos = strpos($parameter, '?');
+        if ($pos !== false) {
+            $parameter = substr_replace($parameter, $parameterReplacement, $pos, 1);
+        }
+
+        return ['parameter' => $parameter, 'parameters' => $parameters];
     }
 
     public function getOperand(): string
