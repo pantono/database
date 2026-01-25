@@ -272,7 +272,7 @@ abstract class AbstractPdoRepository
 
     public function saveModel(SavableInterface $model, ?string $table = null, ?string $idColumn = null): void
     {
-        [$table, $idColumn] = $this->getModelTables($model, $table, $idColumn);
+        [$table, $idColumn] = $this->getModelTables($model::class, $table, $idColumn);
         $getter = 'get' . lcfirst(StringUtilities::camelCase($idColumn));
         $setter = 'set' . lcfirst(StringUtilities::camelCase($idColumn));
         if (!method_exists($model::class, $getter)) {
@@ -288,13 +288,13 @@ abstract class AbstractPdoRepository
     }
 
     /**
-     * @param SavableInterface $model
+     * @param class-string $model
      * @param array<int> $ids
      * @param string|null $table
      * @param string|null $idColumn
      * @return array<int, mixed>
      */
-    public function lookupRecords(SavableInterface $model, array $ids = [], ?string $table = null, ?string $idColumn = null): array
+    public function lookupRecords(string $model, array $ids = [], ?string $table = null, ?string $idColumn = null): array
     {
         [$table, $idColumn] = $this->getModelTables($model, $table, $idColumn);
         $select = $this->getDb()->select()->from($table)->where($idColumn . ' IN (?)', $ids);
@@ -302,21 +302,27 @@ abstract class AbstractPdoRepository
     }
 
     /**
+     * @param class-string $model
      * @return mixed[]|null
      */
-    public function lookupRecord(SavableInterface $model, int|string $id, ?string $table = null, ?string $idColumn = null): ?array
+    public function lookupRecord(string $model, int|string $id, ?string $table = null, ?string $idColumn = null): ?array
     {
         [$table, $idColumn] = $this->getModelTables($model, $table, $idColumn);
         return $this->selectSingleRow($table, $idColumn, $id);
     }
 
     /**
-     * @param SavableInterface $model
+     * @param class-string $model
      * @return array<int,string>
      */
-    private function getModelTables(SavableInterface $model, ?string $table = null, ?string $idColumn = null): array
+    private function getModelTables(string $model, ?string $table = null, ?string $idColumn = null): array
     {
-        $classAttributes = ReflectionUtilities::getClassAttributes($model::class);
+        $reflection = new \ReflectionClass($model);
+        $interfaces = $reflection->getInterfaceNames();
+        if (!in_array(SavableInterface::class, $interfaces)) {
+            throw new \RuntimeException('Model ' . $model . ' does not implement ' . SavableInterface::class);
+        }
+        $classAttributes = ReflectionUtilities::getClassAttributes($model);
         foreach ($classAttributes as $attribute) {
             if ($attribute->getName() === DatabaseTable::class) {
                 $instance = $attribute->newInstance();
@@ -333,7 +339,7 @@ abstract class AbstractPdoRepository
         }
 
         if (!$table || !$idColumn) {
-            throw new \RuntimeException('Unable to determine table and id column for model ' . get_class($model));
+            throw new \RuntimeException('Unable to determine table and id column for model ' . $model);
         }
         return [$table, $idColumn];
     }

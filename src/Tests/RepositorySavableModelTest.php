@@ -69,14 +69,13 @@ class RepositorySavableModelTest extends AbstractMysqlAdapterTestCase
             ->getMock();
         $repo = new DummyRepository($mock);
         $dummySelect = new MysqlSelect($mock);
-        $model = new AttributeSaveModel();
         $mock->expects($this->once())
             ->method('select')
             ->willReturn($dummySelect);
         $mock->expects($this->once())
             ->method('fetchRow')
             ->willReturn(['id' => 1]);
-        $response = $repo->lookupRecord($model, 1);
+        $response = $repo->lookupRecord(AttributeSaveModel::class, 1);
         $this->assertEquals(['id' => 1], $response);
     }
 
@@ -87,7 +86,6 @@ class RepositorySavableModelTest extends AbstractMysqlAdapterTestCase
             ->getMock();
         $repo = new DummyRepository($mock);
         $dummySelect = new MysqlSelect($mock);
-        $model = new AttributeSaveModel();
         $mock->expects($this->once())
             ->method('select')
             ->willReturn($dummySelect);
@@ -96,7 +94,7 @@ class RepositorySavableModelTest extends AbstractMysqlAdapterTestCase
             ->willReturn([
                 ['id' => 1], ['id' => 2]
             ]);
-        $response = $repo->lookupRecords($model, [1, 2, 3]);
+        $response = $repo->lookupRecords(AttributeSaveModel::class, [1, 2, 3]);
         $this->assertEquals([
             ['id' => 1], ['id' => 2]
         ], $response);
