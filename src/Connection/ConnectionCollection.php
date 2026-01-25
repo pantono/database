@@ -6,8 +6,6 @@ namespace Pantono\Database\Connection;
 
 use Pantono\Database\Adapter\Db;
 use Pantono\Database\Repository\MysqlRepository;
-use Pantono\Database\Repository\HubSqlRepository;
-use Pantono\Database\Repository\StocklinkSqlRepository;
 use Pantono\Database\Repository\MssqlRepository;
 use Pantono\Database\Repository\PgsqlRepository;
 
