@@ -272,22 +272,7 @@ abstract class AbstractPdoRepository
 
     public function saveModel(SavableInterface $model, ?string $table = null, ?string $idColumn = null): void
     {
-        if (!$table || !$idColumn) {
-            $classAttributes = ReflectionUtilities::getClassAttributes($model::class);
-            foreach ($classAttributes as $attribute) {
-                if ($attribute->getName() === DatabaseTable::class) {
-                    $instance = $attribute->newInstance();
-                    /** @var DatabaseTable $instance */
-                    $table = $instance->table;
-                    if ($instance->idColumn) {
-                        $idColumn = $instance->idColumn;
-                    }
-                }
-            }
-        }
-        if (!$table || !$idColumn) {
-            throw new \RuntimeException('Unable to determine table and id column for model ' . get_class($model));
-        }
+        [$table, $idColumn] = $this->getModelTables($model, $table, $idColumn);
         $getter = 'get' . lcfirst(StringUtilities::camelCase($idColumn));
         $setter = 'set' . lcfirst(StringUtilities::camelCase($idColumn));
         if (!method_exists($model::class, $getter)) {
@@ -300,6 +285,57 @@ abstract class AbstractPdoRepository
         if ($id) {
             $model->$setter($id);
         }
+    }
+
+    /**
+     * @param SavableInterface $model
+     * @param array<int> $ids
+     * @param string|null $table
+     * @param string|null $idColumn
+     * @return array<int, mixed>
+     */
+    public function lookupRecords(SavableInterface $model, array $ids = [], ?string $table = null, ?string $idColumn = null): array
+    {
+        [$table, $idColumn] = $this->getModelTables($model, $table, $idColumn);
+        $select = $this->getDb()->select()->from($table)->where($idColumn . ' IN (?)', $ids);
+        return $this->getDb()->fetchAll($select);
+    }
+
+    /**
+     * @return mixed[]|null
+     */
+    public function lookupRecord(SavableInterface $model, int|string $id, ?string $table = null, ?string $idColumn = null): ?array
+    {
+        [$table, $idColumn] = $this->getModelTables($model, $table, $idColumn);
+        return $this->selectSingleRow($table, $idColumn, $id);
+    }
+
+    /**
+     * @param SavableInterface $model
+     * @return array<int,string>
+     */
+    private function getModelTables(SavableInterface $model, ?string $table = null, ?string $idColumn = null): array
+    {
+        $classAttributes = ReflectionUtilities::getClassAttributes($model::class);
+        foreach ($classAttributes as $attribute) {
+            if ($attribute->getName() === DatabaseTable::class) {
+                $instance = $attribute->newInstance();
+                /** @var DatabaseTable $instance */
+                if (!$table) {
+                    $table = $instance->table;
+                }
+                if ($instance->idColumn) {
+                    if (!$idColumn) {
+                        $idColumn = $instance->idColumn;
+                    }
+                }
+            }
+        }
+
+        if (!$table || !$idColumn) {
+            throw new \RuntimeException('Unable to determine table and id column for model ' . get_class($model));
+        }
+        return [$table, $idColumn];
     }
 
     /**

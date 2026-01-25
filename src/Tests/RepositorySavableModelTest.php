@@ -61,4 +61,44 @@ class RepositorySavableModelTest extends AbstractMysqlAdapterTestCase
         $repo->saveModel($model);
         $this->assertEquals(1, $model->getId());
     }
+
+    public function testLookupRecordSingle()
+    {
+        $mock = $this->getMockBuilder(MysqlDb::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $repo = new DummyRepository($mock);
+        $dummySelect = new MysqlSelect($mock);
+        $model = new AttributeSaveModel();
+        $mock->expects($this->once())
+            ->method('select')
+            ->willReturn($dummySelect);
+        $mock->expects($this->once())
+            ->method('fetchRow')
+            ->willReturn(['id' => 1]);
+        $response = $repo->lookupRecord($model, 1);
+        $this->assertEquals(['id' => 1], $response);
+    }
+
+    public function testLookupRecordMultiple()
+    {
+        $mock = $this->getMockBuilder(MysqlDb::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $repo = new DummyRepository($mock);
+        $dummySelect = new MysqlSelect($mock);
+        $model = new AttributeSaveModel();
+        $mock->expects($this->once())
+            ->method('select')
+            ->willReturn($dummySelect);
+        $mock->expects($this->once())
+            ->method('fetchAll')
+            ->willReturn([
+                ['id' => 1], ['id' => 2]
+            ]);
+        $response = $repo->lookupRecords($model, [1, 2, 3]);
+        $this->assertEquals([
+            ['id' => 1], ['id' => 2]
+        ], $response);
+    }
 }
