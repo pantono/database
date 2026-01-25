@@ -6,6 +6,10 @@ namespace Pantono\Database\Repository;
 
 use Pantono\Database\Adapter\Db;
 use Pantono\Database\Query\Select\Select;
+use Pantono\Contracts\Application\Interfaces\SavableInterface;
+use Pantono\Utilities\StringUtilities;
+use Pantono\Utilities\ReflectionUtilities;
+use Pantono\Contracts\Attributes\DatabaseTable;
 
 abstract class AbstractPdoRepository
 {
@@ -264,6 +268,38 @@ abstract class AbstractPdoRepository
     public function endTransaction(): void
     {
         $this->getDb()->endTransaction();
+    }
+
+    public function saveModel(SavableInterface $model, ?string $table = null, ?string $idColumn = null): void
+    {
+        if (!$table || !$idColumn) {
+            $classAttributes = ReflectionUtilities::getClassAttributes($model::class);
+            foreach ($classAttributes as $attribute) {
+                if ($attribute->getName() === DatabaseTable::class) {
+                    $instance = $attribute->newInstance();
+                    /** @var DatabaseTable $instance */
+                    $table = $instance->table;
+                    if ($instance->idColumn) {
+                        $idColumn = $instance->idColumn;
+                    }
+                }
+            }
+        }
+        if (!$table || !$idColumn) {
+            throw new \RuntimeException('Unable to determine table and id column for model ' . get_class($model));
+        }
+        $getter = 'get' . lcfirst(StringUtilities::camelCase($idColumn));
+        $setter = 'set' . lcfirst(StringUtilities::camelCase($idColumn));
+        if (!method_exists($model::class, $getter)) {
+            throw new \RuntimeException('Unable to determine getter method for ' . get_class($model));
+        }
+        if (!method_exists($model::class, $setter)) {
+            throw new \RuntimeException('Unable to determine setter method for ' . get_class($model));
+        }
+        $id = $this->insertOrUpdateCheck($table, $idColumn, $model->$getter(), $model->getAllData());
+        if ($id) {
+            $model->$setter($id);
+        }
     }
 
     /**
