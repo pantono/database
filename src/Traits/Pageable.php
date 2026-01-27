@@ -46,6 +46,17 @@ trait Pageable
         return $this->totalResults;
     }
 
+    public function getTotalPages(): int
+    {
+        if ($this->getTotalResults() === 0) {
+            return 0;
+        }
+        if ($this->getPerPage() === 0) {
+            return 0;
+        }
+        return (int)ceil($this->getTotalResults() / $this->getPerPage());
+    }
+
     public function setTotalResults(int $totalResults): void
     {
         $this->totalResults = $totalResults;
