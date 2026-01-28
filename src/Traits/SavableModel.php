@@ -49,6 +49,9 @@ trait SavableModel
 
             if ($type === 'bool' || $type === 'boolean') {
                 $getter = 'is' . ucfirst($property->getName());
+                if (!method_exists($this, $getter)) {
+                    $getter = 'get' . ucfirst($property->getName());
+                }
             }
 
             if (method_exists($this, $getter)) {
