@@ -289,7 +289,7 @@ abstract class AbstractPdoRepository
 
     /**
      * @param class-string $model
-     * @param array<int> $ids
+     * @param array<int|string> $ids
      * @param string|null $table
      * @param string|null $idColumn
      * @return array<int, mixed>
