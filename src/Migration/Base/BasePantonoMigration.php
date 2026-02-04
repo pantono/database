@@ -38,4 +38,10 @@ class BasePantonoMigration extends AbstractMigration
             }
         }
     }
+
+    public function addTablePrefix(string $table): string
+    {
+        $prefix = isset($_ENV['table_prefix']) ? $_ENV['table_prefix'] . '_' : '';
+        return $prefix . $table;
+    }
 }
