@@ -41,7 +41,7 @@ class BasePantonoMigration extends AbstractMigration
 
     public function addTablePrefix(string $table): string
     {
-        $prefix = isset($_ENV['table_prefix']) ? $_ENV['table_prefix'] . '_' : '';
+        $prefix = isset($_ENV['TABLE_PREFIX']) ? $_ENV['TABLE_PREFIX'] . '_' : '';
         return $prefix . $table;
     }
 }

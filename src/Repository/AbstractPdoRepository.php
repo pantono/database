@@ -346,7 +346,7 @@ abstract class AbstractPdoRepository
 
     protected function appendTablePrefix(string $input): string
     {
-        $prefix = isset($_ENV['table_prefix']) ? $_ENV['table_prefix'] . '_' : '';
+        $prefix = isset($_ENV['TABLE_PREFIX']) ? $_ENV['TABLE_PREFIX'] . '_' : '';
         return $prefix . $input;
     }
 
