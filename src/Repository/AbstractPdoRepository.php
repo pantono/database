@@ -344,6 +344,12 @@ abstract class AbstractPdoRepository
         return [$table, $idColumn];
     }
 
+    protected function appendTablePrefix(string $input): string
+    {
+        $prefix = isset($_ENV['table_prefix']) ? $_ENV['table_prefix'] . '_' : '';
+        return $prefix . $input;
+    }
+
     /**
      * @param array<string,mixed> $data
      */
