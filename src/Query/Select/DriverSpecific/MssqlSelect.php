@@ -47,8 +47,13 @@ class MssqlSelect extends Select
         }
         if (!empty($this->where)) {
             $select .= ' WHERE ';
+            $whereIndex = 0;
             foreach ($this->where as $where) {
-                $select .= $this->renderWhere($where) . ' ';
+                if ($whereIndex > 0) {
+                    $select .= ' ' . $where->getOperand() . ' ';
+                }
+                $select .= $this->renderWhere($where);
+                $whereIndex++;
             }
         }
 

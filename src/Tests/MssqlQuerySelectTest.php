@@ -19,6 +19,13 @@ class MssqlQuerySelectTest extends AbstractMssqlAdapterTestCase
         $this->assertEqualsIgnoringCase('SELECT [table].* FROM [table] WHERE [test_column] = :param_1_' . $select->uniqueId, $select->renderQuery());
     }
 
+    public function testSimpleSelectMssqlMultiParams(): void
+    {
+        $select = (new MssqlSelect($this->db))->from('table')->where('test_column = ?', 'test')->where('test_column_2=?', 'test2');
+
+        $this->assertEqualsIgnoringCase('SELECT [table].* FROM [table] WHERE [test_column] = :param_1_' . $select->uniqueId . ' and [test_column_2] = :param_2_' . $select->uniqueId, $select->renderQuery());
+    }
+
     public function testLeftJoinPrintMssql(): void
     {
         $select = (new MssqlSelect($this->db))->from('table')->joinInner('joined_table', 'joined_table.id=table.join_id', ['id'])->where('test_column = ?', 'test');
