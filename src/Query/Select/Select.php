@@ -150,9 +150,13 @@ class Select
         return $this;
     }
 
-    public function limit(int $limit): self
+    public function limit(int $limit, ?int $offset = null): self
     {
+        $this->offset = null;
         $this->limit = $limit;
+        if ($offset) {
+            $this->offset = $offset;
+        }
         return $this;
     }
 
