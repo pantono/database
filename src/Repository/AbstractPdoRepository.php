@@ -8,8 +8,7 @@ use Pantono\Database\Adapter\Db;
 use Pantono\Database\Query\Select\Select;
 use Pantono\Contracts\Application\Interfaces\SavableInterface;
 use Pantono\Utilities\StringUtilities;
-use Pantono\Utilities\ReflectionUtilities;
-use Pantono\Contracts\Attributes\DatabaseTable;
+use Pantono\Utilities\Model\PantonoReflectionModel;
 
 abstract class AbstractPdoRepository
 {
@@ -317,27 +316,15 @@ abstract class AbstractPdoRepository
      */
     private function getModelTables(string $model, ?string $table = null, ?string $idColumn = null): array
     {
-        $reflection = new \ReflectionClass($model);
-        $interfaces = $reflection->getInterfaceNames();
-        if (!in_array(SavableInterface::class, $interfaces)) {
-            throw new \RuntimeException('Model ' . $model . ' does not implement ' . SavableInterface::class);
-        }
-        $classAttributes = ReflectionUtilities::getClassAttributes($model);
-        foreach ($classAttributes as $attribute) {
-            if ($attribute->getName() === DatabaseTable::class) {
-                $instance = $attribute->newInstance();
-                /** @var DatabaseTable $instance */
-                if (!$table) {
-                    $table = $instance->table;
-                }
-                if ($instance->idColumn) {
-                    if (!$idColumn) {
-                        $idColumn = $instance->idColumn;
-                    }
-                }
+        if (!$table || !$idColumn) {
+            $reflection = new PantonoReflectionModel($model);
+            if (!$table) {
+                $table = $reflection->getDatabaseTable();
+            }
+            if (!$idColumn) {
+                $idColumn = $reflection->getDatabaseIdColumn();
             }
         }
-
         if (!$table || !$idColumn) {
             throw new \RuntimeException('Unable to determine table and id column for model ' . $model);
         }
