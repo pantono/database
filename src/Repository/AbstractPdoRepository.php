@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Pantono\Database\Repository;
 
 use Pantono\Database\Adapter\Db;
-use Pantono\Database\Query\Select\Select;
 use Pantono\Contracts\Application\Interfaces\SavableInterface;
 use Pantono\Utilities\StringUtilities;
 use Pantono\Utilities\Model\PantonoReflectionModel;
@@ -235,9 +234,12 @@ abstract class AbstractPdoRepository
     /**
      * @param array<string>|string $columns
      */
-    public function select(string $table, array|string $columns = '*'): Select
+    public function select(string $table, array|string $columns = '*'): QueryBuilder
     {
-        return $this->getDb()->select()->from($table, $columns);
+        if (is_string($columns)) {
+            return $this->getDb()->select($columns)->from($table);
+        }
+        return $this->getDb()->select(...$columns)->from($table);
     }
 
     public function getCount(QueryBuilder $queryBuilder): int

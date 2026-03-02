@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Pantono\Database\Adapter;
 
 use PDO;
-use Pantono\Database\Query\Select\Select;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\DBAL\Connection;
@@ -39,9 +38,9 @@ abstract class Db
         $this->options = $options;
     }
 
-    public function select(): Select
+    public function select(string ...$expressions): QueryBuilder
     {
-        return new Select($this);
+        return $this->createQueryBuilder()->select(...$expressions);
     }
 
     /**
