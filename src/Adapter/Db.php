@@ -104,20 +104,28 @@ abstract class Db
 
     /**
      * @param array<mixed> $parameters
-     * @return array<string,mixed>|false
+     * @return array<string,mixed>|null
      */
-    public function fetchRow(string|QueryBuilder $select, array $parameters = []): array|false
+    public function fetchRow(string|QueryBuilder $select, array $parameters = []): ?array
     {
         if ($select instanceof QueryBuilder) {
             $result = $select->executeQuery();
-            return $result->fetchAssociative();
+            $row = $result->fetchAssociative();
+            if ($row === false) {
+                return null;
+            }
+            return $row;
         }
         $statement = $this->getDoctrineConnection()->prepare($select);
         foreach ($parameters as $key => $value) {
             $statement->bindValue($key, $value);
         }
         $result = $statement->executeQuery();
-        return $result->fetchAssociative();
+        $row = $result->fetchAssociative();
+        if ($row === false) {
+            return null;
+        }
+        return $row;
     }
 
     /**
