@@ -10,7 +10,8 @@
     "nette/php-generator": "^4.0",
     "ext-pdo": "*",
     "doctrine/sql-formatter": "^1.1",
-    "pantono/phinx": "^0.16"
+    "pantono/phinx": "^0.16",
+    "doctrine/dbal": "^4.4"
   },
   "require-dev": {
     "phpunit/phpunit": "^10.3",

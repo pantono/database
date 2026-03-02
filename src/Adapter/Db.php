@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Pantono\Database\Adapter;
 
 use PDO;
-use PDOStatement;
-use Pantono\Database\Query\Delete;
-use Pantono\Database\Query\Insert;
 use Pantono\Database\Query\Select\Select;
-use Pantono\Database\Query\Update;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Tools\DsnParser;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
 
 abstract class Db
 {
@@ -23,6 +23,7 @@ abstract class Db
      */
     private ?array $options;
     public static int $fetchMode = PDO::FETCH_ASSOC;
+    private ?Connection $doctrineConnection = null;
 
     /**
      * @param array<mixed>|null $options
@@ -49,12 +50,20 @@ abstract class Db
      */
     public function update(string $table, array $parameters, array $where): int
     {
-        $this->checkConnection();
-        $query = new Update($table, $parameters, $where, $this);
-        $statement = $this->pdo->prepare($query->renderQuery());
-
-        $statement->execute($query->getComputedParams());
-        return $statement->rowCount();
+        $qb = $this->createQueryBuilder()
+            ->update($table);
+        foreach ($parameters as $column => $value) {
+            $qb->set($column, ':' . $column)
+                ->setParameter(':' . $column, $value);
+        }
+        $count = 0;
+        foreach ($where as $expression => $value) {
+            $placeholder = ':column_' . $count;
+            $qb->where($expression, ':' . $placeholder)
+                ->setParameter(':' . $placeholder, $value);
+            $count++;
+        }
+        return (int)$qb->executeQuery()->rowCount();
     }
 
     public function getConnection(): \PDO
@@ -68,12 +77,16 @@ abstract class Db
      */
     public function delete(string $table, array $parameters): int
     {
-        $this->checkConnection();
-        $query = new Delete($table, $parameters, $this);
-        $statement = $this->pdo->prepare($query->renderQuery());
-
-        $statement->execute($query->getComputedParams());
-        return $statement->rowCount();
+        $qb = $this->createQueryBuilder()
+            ->delete($table);
+        $count = 0;
+        foreach ($parameters as $expression => $value) {
+            $placeholder = ':column_' . $count;
+            $qb->where($expression, ':' . $placeholder)
+                ->setParameter(':' . $placeholder, $value);
+            $count++;
+        }
+        return (int)$qb->executeQuery()->rowCount();
     }
 
     /**
@@ -81,87 +94,78 @@ abstract class Db
      */
     public function insert(string $table, array $parameters): int
     {
-        $this->checkConnection();
-        $query = new Insert($table, $parameters, $this);
-        $statement = $this->pdo->prepare($query->renderQuery());
-        $params = $query->getParameters();
-        foreach ($params as $parameter => $value) {
-            $statement->bindValue($parameter, $value);
+        $qb = $this->createQueryBuilder()
+            ->insert($table);
+        foreach ($parameters as $column => $value) {
+            $qb->set($column, ':' . $column)
+                ->setParameter(':' . $column, $value);
         }
-
-        $statement->execute();
-        return $statement->rowCount();
+        return (int)$qb->executeQuery()->rowCount();
     }
 
     /**
      * @param array<mixed> $parameters
-     * @return array<mixed>|null
+     * @return array<string,mixed>|false
      */
-    public function fetchRow(string|Select $select, array $parameters = []): ?array
+    public function fetchRow(string|QueryBuilder $select, array $parameters = []): array|false
     {
-        $this->checkConnection();
-        $statement = $this->prepareQuery($select);
+        if ($select instanceof QueryBuilder) {
+            $result = $select->executeQuery();
+            return $result->fetchAssociative();
+        }
+        $statement = $this->getDoctrineConnection()->prepare($select);
         foreach ($parameters as $key => $value) {
             $statement->bindValue($key, $value);
         }
-        $statement->execute();
-        $result = $statement->fetch(self::$fetchMode);
-        if ($result === false) {
-            return null;
-        }
-        return $result;
+        $result = $statement->executeQuery();
+        return $result->fetchAssociative();
     }
 
     /**
      * @param array<mixed> $parameters
      * @return array<mixed>
      */
-    public function fetchAll(string|Select $select, array $parameters = []): array
+    public function fetchAll(string|QueryBuilder $select, array $parameters = []): array
     {
+        if ($select instanceof QueryBuilder) {
+            $result = $select->executeQuery();
+            return $result->fetchAllAssociative();
+        }
         $this->checkConnection();
 
-        $statement = $this->prepareQuery($select);
+        $statement = $this->getDoctrineConnection()->prepare($select);
         foreach ($parameters as $key => $value) {
             $statement->bindValue($key, $value);
         }
-        $statement->execute();
-
-        return $statement->fetchAll(self::$fetchMode);
+        $result = $statement->executeQuery();
+        return $result->fetchAllAssociative();
     }
 
-    public function query(string $query, array $parameters = []): int
+    public function query(string|QueryBuilder $query, array $parameters = []): int
     {
+        if ($query instanceof QueryBuilder) {
+            $result = $query->executeQuery();
+            return (int)$result->rowCount();
+        }
         $this->checkConnection();
-        $statement = $this->pdo->prepare($query);
+        $statement = $this->getDoctrineConnection()->prepare($query);
         foreach ($parameters as $key => $value) {
             $statement->bindValue($key, $value);
         }
-        $statement->execute();
+        $result = $statement->executeQuery();
 
-        return $statement->rowCount();
-    }
-
-    private function prepareQuery(string|Select $select): PDOStatement
-    {
-        if ($select instanceof Select) {
-            $statement = $this->pdo->prepare($select->renderQuery());
-        } else {
-            $statement = $this->pdo->prepare($select);
-        }
-        if ($select instanceof Select) {
-            $values = $select->getParameters();
-            foreach ($values as $param => $value) {
-                $statement->bindValue($param, $values[$param]);
-            }
-        }
-        return $statement;
+        return (int)$result->rowCount();
     }
 
     /**
      * @param array<mixed> $parameters
      */
-    public function runQuery(string $query, array $parameters): mixed
+    public function runQuery(string|QueryBuilder $query, array $parameters): mixed
     {
+        if ($query instanceof QueryBuilder) {
+            $result = $query->executeQuery();
+            return $result->fetchAllAssociative();
+        }
         $this->checkConnection();
         $statement = $this->pdo->prepare($query);
         foreach ($parameters as $key => $value) {
@@ -170,22 +174,24 @@ abstract class Db
         return $statement->execute($parameters);
     }
 
-    abstract public function lastInsertId(?string $table = null, ?string $primaryKey = null): false|string|int|null;
+
+    public function lastInsertId(?string $table = null): false|string|int|null
+    {
+        return $this->getConnection()->lastInsertId($table);
+    }
 
     public function beginTransaction(): void
     {
-        $this->checkConnection();
-        $this->pdo->beginTransaction();
+        $this->getDoctrineConnection()->beginTransaction();
     }
 
     public function endTransaction(): void
     {
-        $this->checkConnection();
         $attempts = 0;
         $maxAttempts = 3;
         do {
             try {
-                $this->pdo->commit();
+                $this->getDoctrineConnection()->commit();
                 return;
             } catch (\PDOException $e) {
                 $sqlState = $e->errorInfo[0] ?? null;
@@ -198,8 +204,8 @@ abstract class Db
                 if (!$isDeadlock || ++$attempts >= $maxAttempts) {
                     // Best-effort rollback if still in transaction
                     try {
-                        if ($this->pdo->inTransaction()) {
-                            $this->pdo->rollBack();
+                        if ($this->getDoctrineConnection()->isTransactionActive()) {
+                            $this->getDoctrineConnection()->rollBack();
                         }
                     } catch (\Throwable $_) {
                         // swallow
@@ -223,7 +229,31 @@ abstract class Db
 
     abstract public function foreignKeyChecks(bool $enabled): void;
 
-    abstract public function quoteTable(string $table): string;
+    public function quoteTable(string $table): string
+    {
+        return $this->getDoctrineConnection()->quote($table);
+    }
 
-    abstract public function quoteColumn(string $table, ?string $column = null): string;
+    public function quoteColumn(string $table, ?string $column = null): string
+    {
+        $con = $this->getDoctrineConnection();
+        if ($column === null) {
+            return $con->quoteSingleIdentifier($table);
+        }
+        return $con->quoteSingleIdentifier($table) . '.' . $con->quoteSingleIdentifier($column);
+    }
+
+    public function getDoctrineConnection(): Connection
+    {
+        if (!$this->doctrineConnection) {
+            $params = (new DsnParser())->parse($this->dsn);
+            $this->doctrineConnection = DriverManager::getConnection($params);
+        }
+        return $this->doctrineConnection;
+    }
+
+    public function createQueryBuilder(): QueryBuilder
+    {
+        return $this->getDoctrineConnection()->createQueryBuilder();
+    }
 }

@@ -9,6 +9,7 @@ use Pantono\Database\Query\Select\Select;
 use Pantono\Contracts\Application\Interfaces\SavableInterface;
 use Pantono\Utilities\StringUtilities;
 use Pantono\Utilities\Model\PantonoReflectionModel;
+use Doctrine\DBAL\Query\QueryBuilder;
 
 abstract class AbstractPdoRepository
 {
@@ -62,8 +63,10 @@ abstract class AbstractPdoRepository
         if ($value === null) {
             return null;
         }
-        $select = $this->getDb()->select()->from($table)->where($column . '=?', $value);
-        $row = $this->getDb()->fetchRow($select);
+        $qb = $this->getDb()->createQueryBuilder();
+        $qb->select()->from($table)->where($column . '=?', ':value');
+        $qb->setParameter(':value', $value);
+        $row = $this->getDb()->fetchRow($qb);
 
         return empty($row) ? null : $row;
     }
@@ -76,19 +79,12 @@ abstract class AbstractPdoRepository
         if ($value === null) {
             return null;
         }
-        $select = $this->getDb()->select()->from($table)->where($column . '=?', $value);
-        $select .= ' FOR UPDATE';
-        $row = $this->getDb()->fetchRow($select);
-
-        return empty($row) ? null : $row;
-    }
-
-    /**
-     * @return array<mixed>
-     */
-    public function selectSingleRowFromQuery(Select $query): ?array
-    {
-        $row = $this->getDb()->fetchRow($query);
+        $qb = $this->getDb()->createQueryBuilder();
+        $qb->select()->from($table)->where($column . '=?', ':value');
+        $qb->setParameter(':value', $value);
+        $sql = $qb->getSQL();
+        $sql .= ' FOR UPDATE';
+        $row = $this->getDb()->fetchRow($sql, $qb->getParameters());
 
         return empty($row) ? null : $row;
     }
@@ -98,12 +94,13 @@ abstract class AbstractPdoRepository
      */
     public function selectAll(string $table, ?string $order = null): array
     {
-        $select = $this->getDb()->select()->from($table);
+        $qb = $this->getDb()->createQueryBuilder();
+        $qb->select()->from($table);
         if ($order !== null) {
-            $select->order($order);
+            $qb->addOrderBy($order);
         }
 
-        return $this->getDb()->fetchAll($select);
+        return $this->getDb()->fetchAll($qb);
     }
 
     /**
@@ -112,22 +109,27 @@ abstract class AbstractPdoRepository
      */
     public function selectRowsByValues(string $table, array $fields, ?string $order = null, ?int $limit = null): array
     {
-        $select = $this->getDb()->select()->from($table);
+        $qb = $this->getDb()->createQueryBuilder();
+        $qb->select()->from($table);
+        $index = 0;
         foreach ($fields as $key => $field) {
             if ($field === null) {
-                $select->where($key . ' IS NULL');
+                $qb->where($key . ' IS NULL');
             } else {
-                $select->where($key . ' =?', $field);
+                $key = 'value_' . $index;
+                $qb->where($key . ' =?', $key)
+                    ->setParameter($key, $field);
             }
+            $index++;
         }
         if ($order !== null) {
-            $select->order($order);
+            $qb->addOrderBy($order);
         }
         if ($limit !== null) {
-            $select->limit($limit);
+            $qb->setMaxResults($limit);
         }
 
-        return $this->getDb()->fetchAll($select);
+        return $this->getDb()->fetchAll($qb);
     }
 
     /**
@@ -136,17 +138,27 @@ abstract class AbstractPdoRepository
      */
     public function selectRowByValues(string $table, array $fields, ?string $order = null, ?int $limit = null): ?array
     {
-        $select = $this->getDb()->select()->from($table);
+        $qb = $this->getDb()->createQueryBuilder();
+        $qb->select()->from($table);
+        $index = 0;
         foreach ($fields as $key => $field) {
-            $select->where($key . ' =?', $field);
+            if ($field === null) {
+                $qb->where($key . ' IS NULL');
+            } else {
+                $key = 'value_' . $index;
+                $qb->where($key . ' =?', $key)
+                    ->setParameter($key, $field);
+            }
+            $index++;
         }
         if ($order !== null) {
-            $select->order($order);
+            $qb->addOrderBy($order);
         }
         if ($limit !== null) {
-            $select->limit($limit);
+            $qb->setMaxResults($limit);
         }
-        $row = $this->getDb()->fetchRow($select);
+
+        $row = $this->getDb()->fetchRow($qb);
         return !empty($row) ? $row : null;
     }
 
@@ -161,7 +173,7 @@ abstract class AbstractPdoRepository
                 $data
             );
 
-            return intval($this->getDb()->lastInsertId($table, $idColumn));
+            return intval($this->getDb()->lastInsertId($table));
         }
 
         $this->getDb()->update($table, $data, [$idColumn . '=?' => $id]);
@@ -193,7 +205,7 @@ abstract class AbstractPdoRepository
             $data
         );
 
-        return intval($this->getDb()->lastInsertId($table, $idColumn));
+        return intval($this->getDb()->lastInsertId($table));
     }
 
     /**
@@ -201,16 +213,21 @@ abstract class AbstractPdoRepository
      */
     public function selectCount(string $table, array $parameters, ?string $groupBy = null): int
     {
-        $select = $this->getDb()->select()->from($table, ['COUNT(1) as cnt']);
+        $qb = $this->getDb()->createQueryBuilder();
+        $qb->select('COUNT(1) as cnt')->from($table);
+        $index = 0;
         foreach ($parameters as $name => $value) {
-            $select->where($name . '=?', $value);
+            $key = ':value_' . $index;
+            $qb->where($name . '= ' . $key)
+                ->setParameter($key, $value);
+            $index++;
         }
 
         if ($groupBy !== null) {
-            $select->group($groupBy);
+            $qb->groupBy($groupBy);
         }
 
-        $row = $this->getDb()->fetchRow($select);
+        $row = $this->getDb()->fetchRow($qb);
 
         return $row ? intval($row['cnt']) : 0;
     }
@@ -223,25 +240,14 @@ abstract class AbstractPdoRepository
         return $this->getDb()->select()->from($table, $columns);
     }
 
-    /**
-     * @return array<mixed>
-     */
-    public function fetchAll(Select $select): array
+    public function getCount(QueryBuilder $queryBuilder): int
     {
-        return $this->getDb()->fetchAll($select);
-    }
+        $qb = $this->getDb()->createQueryBuilder();
+        $qb->with('count_query', $queryBuilder);
+        $qb->select('COUNT(1) as cnt')->from('count_query');
 
-    public function getCount(Select $select): int
-    {
-        $select = clone($select);
-        $select->reset('order');
-        $countSelect = $this->getDb()->select()->from(['c' => $select], ['COUNT(1) as cnt']);
-
-        $countRow = $this->getDb()->fetchRow($countSelect);
-        if (isset($countRow['cnt'])) {
-            return intval($countRow['cnt']);
-        }
-        return 0;
+        $row = $qb->fetchAssociative();
+        return $row ? intval($row['cnt']) : 0;
     }
 
     /**
@@ -296,8 +302,12 @@ abstract class AbstractPdoRepository
     public function lookupRecords(string $model, array $ids = [], ?string $table = null, ?string $idColumn = null): array
     {
         [$table, $idColumn] = $this->getModelTables($model, $table, $idColumn);
-        $select = $this->getDb()->select()->from($table)->where($idColumn . ' IN (?)', $ids);
-        return $this->getDb()->fetchAll($select);
+        $qb = $this->getDb()->createQueryBuilder();
+        $qb->select('*')->from($table)
+            ->where($idColumn . ' IN (:ids)')
+            ->setParameter(':ids', $ids);
+
+        return $this->getDb()->fetchAll($qb);
     }
 
     /**
