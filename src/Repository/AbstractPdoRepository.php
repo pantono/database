@@ -9,6 +9,7 @@ use Pantono\Contracts\Application\Interfaces\SavableInterface;
 use Pantono\Utilities\StringUtilities;
 use Pantono\Utilities\Model\PantonoReflectionModel;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Pantono\Contracts\Filter\PageableInterface;
 
 abstract class AbstractPdoRepository
 {
@@ -240,6 +241,19 @@ abstract class AbstractPdoRepository
             return $this->getDb()->select($columns)->from($table);
         }
         return $this->getDb()->select(...$columns)->from($table);
+    }
+
+    public function applyLimit(QueryBuilder $queryBuilder, PageableInterface $filter): QueryBuilder
+    {
+        $queryBuilder->setMaxResults($filter->getPerPage());
+        $queryBuilder->setFirstResult(($filter->getPage() - 1) * $filter->getPerPage());
+        return $queryBuilder;
+    }
+
+    public function applyCountAndLimit(QueryBuilder $queryBuilder, PageableInterface $filter): QueryBuilder
+    {
+        $filter->setTotalResults($this->getCount($queryBuilder));
+        return $this->applyLimit($queryBuilder, $filter);
     }
 
     public function getCount(QueryBuilder $queryBuilder): int
