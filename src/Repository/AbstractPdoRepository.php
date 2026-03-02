@@ -10,6 +10,7 @@ use Pantono\Utilities\StringUtilities;
 use Pantono\Utilities\Model\PantonoReflectionModel;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Pantono\Contracts\Filter\PageableInterface;
+use Doctrine\DBAL\ArrayParameterType;
 
 abstract class AbstractPdoRepository
 {
@@ -321,7 +322,7 @@ abstract class AbstractPdoRepository
         $qb = $this->getDb()->createQueryBuilder();
         $qb->select('*')->from($table)
             ->where($idColumn . ' IN (:ids)')
-            ->setParameter(':ids', $ids);
+            ->setParameter(':ids', $ids, ArrayParameterType::INTEGER);
 
         return $this->getDb()->fetchAll($qb);
     }
