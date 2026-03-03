@@ -6,6 +6,7 @@ namespace Pantono\Database\Adapter;
 
 use PDO;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -203,7 +204,13 @@ abstract class Db
 
     public function quoteTable(string $table): string
     {
-        return $this->getDoctrineConnection()->quoteSingleIdentifier($table);
+        $platform = $this->getDoctrineConnection()->getDatabasePlatform();
+        if (str_contains($table, '.')) {
+            $parts = explode('.', $table);
+            $parts = array_map(fn(string $part): string => $this->quoteIdentifierPart($platform, $part), $parts);
+            return implode('.', $parts);
+        }
+        return $this->quoteIdentifierPart($platform, $table);
     }
 
     public function quoteColumn(string $table, ?string $column = null): string
@@ -213,6 +220,21 @@ abstract class Db
             return $con->quoteSingleIdentifier($table);
         }
         return $con->quoteSingleIdentifier($table) . '.' . $con->quoteSingleIdentifier($column);
+    }
+
+    private function quoteIdentifierPart(AbstractPlatform $platform, string $identifier): string
+    {
+        if ($this->isQuotedIdentifier($identifier)) {
+            return $identifier;
+        }
+        return $platform->quoteSingleIdentifier($identifier);
+    }
+
+    private function isQuotedIdentifier(string $identifier): bool
+    {
+        return (str_starts_with($identifier, '`') && str_ends_with($identifier, '`'))
+            || (str_starts_with($identifier, '"') && str_ends_with($identifier, '"'))
+            || (str_starts_with($identifier, '[') && str_ends_with($identifier, ']'));
     }
 
     public function getDoctrineConnection(): Connection
