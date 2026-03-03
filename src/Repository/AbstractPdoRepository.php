@@ -363,6 +363,11 @@ abstract class AbstractPdoRepository
         return $this->quoteTable($prefix . $input);
     }
 
+    protected function pt(string $input): string
+    {
+        return $this->appendTablePrefix($input);
+    }
+
     /**
      * @param array<string,mixed> $data
      */
