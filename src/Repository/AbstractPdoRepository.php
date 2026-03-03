@@ -65,7 +65,7 @@ abstract class AbstractPdoRepository
             return null;
         }
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select()->from($table)->where($column . '=?', ':value');
+        $qb->select('t.*')->from($table, 't')->where('t.' . $column . '=?', ':value');
         $qb->setParameter(':value', $value);
         $row = $this->getDb()->fetchRow($qb);
 
@@ -81,7 +81,7 @@ abstract class AbstractPdoRepository
             return null;
         }
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select()->from($table)->where($column . '=?', ':value');
+        $qb->select('t.*')->from($table, 't')->where('t.' . $column . '=?', ':value');
         $qb->setParameter(':value', $value);
         $sql = $qb->getSQL();
         $sql .= ' FOR UPDATE';
@@ -96,7 +96,7 @@ abstract class AbstractPdoRepository
     public function selectAll(string $table, ?string $order = null): array
     {
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select()->from($table);
+        $qb->select('t.*')->from($table, 't');
         if ($order !== null) {
             $qb->addOrderBy($order);
         }
@@ -111,7 +111,7 @@ abstract class AbstractPdoRepository
     public function selectRowsByValues(string $table, array $fields, ?string $order = null, ?int $limit = null): array
     {
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select()->from($table);
+        $qb->select('t.*')->from($table, 't');
         $index = 0;
         foreach ($fields as $key => $field) {
             if ($field === null) {
@@ -140,7 +140,7 @@ abstract class AbstractPdoRepository
     public function selectRowByValues(string $table, array $fields, ?string $order = null, ?int $limit = null): ?array
     {
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select()->from($table);
+        $qb->select('t.*')->from($table, 't');
         $index = 0;
         foreach ($fields as $key => $field) {
             if ($field === null) {
