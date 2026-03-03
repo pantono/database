@@ -30,9 +30,15 @@ abstract class MysqlRepository extends AbstractPdoRepository
 
     public function getLock(string $lockName, int $timeoutSeconds = 5): bool
     {
-        $statement = $this->getDb()->getConnection()->prepare('SELECT GET_LOCK(:n, :t) as `lock`');
-        $statement->execute(['n' => $lockName, 't' => $timeoutSeconds]);
-        return $statement->fetchColumn() === '1';
+        $statement = $this->getDb()->getDoctrineConnection()->prepare('SELECT GET_LOCK(:n, :t) as `lock`');
+        $statement->bindValue('n', $lockName);
+        $statement->bindValue('t', $timeoutSeconds);
+        $result = $statement->executeQuery();
+        $row = $result->fetchAssociative();
+        if (!isset($row['lock'])) {
+            return false;
+        }
+        return $row['lock'] === '1';
     }
 
     public function releaseLock(string $name): void

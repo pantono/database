@@ -3,15 +3,9 @@
 namespace Pantono\Database\Query\Select\DriverSpecific;
 
 use Pantono\Database\Query\Select\Select;
-use Pantono\Database\Adapter\Db;
 
 class PgsqlSelect extends Select
 {
-    public function __construct(Db $adapter)
-    {
-        parent::__construct($adapter);
-    }
-
     public function renderQuery(): string
     {
         $columns = [];

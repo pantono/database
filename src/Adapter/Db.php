@@ -12,30 +12,13 @@ use Doctrine\DBAL\Query\QueryBuilder;
 
 abstract class Db
 {
-    private bool $connected = false;
     protected PDO $pdo;
     private string $dsn;
-    private string $user;
-    private string $pass;
-    /**
-     * @var mixed[]|null
-     */
-    private ?array $options;
-    public static int $fetchMode = PDO::FETCH_ASSOC;
     private ?Connection $doctrineConnection = null;
 
-    /**
-     * @param array<mixed>|null $options
-     */
-    public function __construct(string $dsn, string $user, string $pass, ?array $options = null)
+    public function __construct(string $dsn)
     {
-        if ($options === null) {
-            $options = [];
-        }
         $this->dsn = $dsn;
-        $this->user = $user;
-        $this->pass = $pass;
-        $this->options = $options;
     }
 
     public function select(string ...$expressions): QueryBuilder
@@ -63,12 +46,6 @@ abstract class Db
             $count++;
         }
         return (int)$qb->executeQuery()->rowCount();
-    }
-
-    public function getConnection(): \PDO
-    {
-        $this->checkConnection();
-        return $this->pdo;
     }
 
     /**
@@ -138,8 +115,6 @@ abstract class Db
             $result = $select->executeQuery();
             return $result->fetchAllAssociative();
         }
-        $this->checkConnection();
-
         $statement = $this->getDoctrineConnection()->prepare($select);
         foreach ($parameters as $key => $value) {
             $statement->bindValue($key, $value);
@@ -154,7 +129,6 @@ abstract class Db
             $result = $query->executeQuery();
             return (int)$result->rowCount();
         }
-        $this->checkConnection();
         $statement = $this->getDoctrineConnection()->prepare($query);
         foreach ($parameters as $key => $value) {
             $statement->bindValue($key, $value);
@@ -173,18 +147,17 @@ abstract class Db
             $result = $query->executeQuery();
             return $result->fetchAllAssociative();
         }
-        $this->checkConnection();
-        $statement = $this->pdo->prepare($query);
+        $statement = $this->getDoctrineConnection()->prepare($query);
         foreach ($parameters as $key => $value) {
             $statement->bindValue($key, $value);
         }
-        return $statement->execute($parameters);
+        return $statement->executeQuery();
     }
 
 
-    public function lastInsertId(?string $table = null): false|string|int|null
+    public function lastInsertId(): false|string|int|null
     {
-        return $this->getConnection()->lastInsertId($table);
+        return $this->getDoctrineConnection()->lastInsertId();
     }
 
     public function beginTransaction(): void
@@ -224,14 +197,6 @@ abstract class Db
                 usleep(100000 * $attempts); // 100ms, 200ms, 300ms
             }
         } while (true);
-    }
-
-    protected function checkConnection(): void
-    {
-        if ($this->connected === false) {
-            $this->pdo = new PDO($this->dsn, $this->user, $this->pass, $this->options);
-            $this->connected = true;
-        }
     }
 
     abstract public function foreignKeyChecks(bool $enabled): void;
