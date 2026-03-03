@@ -36,14 +36,14 @@ abstract class Db
         $qb = $this->createQueryBuilder()
             ->update($table);
         foreach ($parameters as $column => $value) {
-            $qb->set($column, ':' . $column)
-                ->setParameter(':' . $column, $value);
+            $qb->set($this->quoteTable($column), ':' . $column)
+                ->setParameter($column, $value);
         }
         $count = 0;
         foreach ($where as $expression => $value) {
-            $placeholder = ':column_' . $count;
-            $qb->where($expression, ':' . $placeholder)
-                ->setParameter(':' . $placeholder, $value);
+            $placeholder = 'column_' . $count;
+            $qb->where($expression . '=:' . $placeholder)
+                ->setParameter($placeholder, $value);
             $count++;
         }
         return (int)$qb->executeQuery()->rowCount();
@@ -75,7 +75,7 @@ abstract class Db
             ->insert($table);
         foreach ($parameters as $column => $value) {
             $qb->set($column, ':' . $column)
-                ->setParameter(':' . $column, $value);
+                ->setParameter($column, $value);
         }
         return (int)$qb->executeQuery()->rowCount();
     }
