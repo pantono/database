@@ -116,9 +116,9 @@ abstract class AbstractPdoRepository
             if ($field === null) {
                 $qb->where($key . ' IS NULL');
             } else {
-                $key = 'value_' . $index;
-                $qb->where($key . ' =:' . $key)
-                    ->setParameter($key, $field);
+                $param = 'value_' . $index;
+                $qb->where($key . ' =:' . $param)
+                    ->setParameter($param, $field);
             }
             $index++;
         }
@@ -145,9 +145,9 @@ abstract class AbstractPdoRepository
             if ($field === null) {
                 $qb->where($key . ' IS NULL');
             } else {
-                $key = 'value_' . $index;
-                $qb->where($key . ' =?', $key)
-                    ->setParameter($key, $field);
+                $param = 'value_' . $index;
+                $qb->where($key . ' =:' . $param)
+                    ->setParameter($param, $field);
             }
             $index++;
         }
@@ -217,8 +217,8 @@ abstract class AbstractPdoRepository
         $qb->select('COUNT(1) as cnt')->from($this->quoteTable($table));
         $index = 0;
         foreach ($parameters as $name => $value) {
-            $key = ':value_' . $index;
-            $qb->where($name . '= ' . $key)
+            $key = 'value_' . $index;
+            $qb->where($name . '= :' . $key)
                 ->setParameter($key, $value);
             $index++;
         }
