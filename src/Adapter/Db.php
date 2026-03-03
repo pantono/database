@@ -203,7 +203,7 @@ abstract class Db
 
     public function quoteTable(string $table): string
     {
-        return $this->getDoctrineConnection()->quote($table);
+        return $this->getDoctrineConnection()->quoteSingleIdentifier($table);
     }
 
     public function quoteColumn(string $table, ?string $column = null): string
