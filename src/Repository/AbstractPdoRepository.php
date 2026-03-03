@@ -80,11 +80,10 @@ abstract class AbstractPdoRepository
         if ($value === null) {
             return null;
         }
-        $qb = $this->getDb()->createQueryBuilder();
+        $qb = $this->getDb()->createQueryBuilder()->forUpdate();
         $qb->select('t.*')->from($table, 't')->where('t.' . $column . '=:value');
         $qb->setParameter('value', $value);
         $sql = $qb->getSQL();
-        $sql .= ' FOR UPDATE';
         $row = $this->getDb()->fetchRow($sql, $qb->getParameters());
 
         return empty($row) ? null : $row;
