@@ -53,7 +53,7 @@ abstract class AbstractPdoRepository
 
     public function quoteTable(string $table): string
     {
-        return $this->db->quoteTable($table);
+        return $this->getDb()->quoteTable($table);
     }
 
     /**
@@ -65,7 +65,7 @@ abstract class AbstractPdoRepository
             return null;
         }
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select('t.*')->from($table, 't')->where('t.' . $column . '=:value');
+        $qb->select('t.*')->from($this->quoteTable($table), 't')->where('t.' . $column . '=:value');
         $qb->setParameter('value', $value);
         $row = $this->getDb()->fetchRow($qb);
 
@@ -81,7 +81,7 @@ abstract class AbstractPdoRepository
             return null;
         }
         $qb = $this->getDb()->createQueryBuilder()->forUpdate();
-        $qb->select('t.*')->from($table, 't')->where('t.' . $column . '=:value');
+        $qb->select('t.*')->from($this->quoteTable($table), 't')->where('t.' . $column . '=:value');
         $qb->setParameter('value', $value);
         $sql = $qb->getSQL();
         $row = $this->getDb()->fetchRow($sql, $qb->getParameters());
@@ -95,7 +95,7 @@ abstract class AbstractPdoRepository
     public function selectAll(string $table, ?string $order = null): array
     {
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select('t.*')->from($table, 't');
+        $qb->select('t.*')->from($this->quoteTable($table), 't');
         if ($order !== null) {
             $qb->addOrderBy($order);
         }
@@ -110,7 +110,7 @@ abstract class AbstractPdoRepository
     public function selectRowsByValues(string $table, array $fields, ?string $order = null, ?int $limit = null): array
     {
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select('t.*')->from($table, 't');
+        $qb->select('t.*')->from($this->quoteTable($table), 't');
         $index = 0;
         foreach ($fields as $key => $field) {
             if ($field === null) {
@@ -139,7 +139,7 @@ abstract class AbstractPdoRepository
     public function selectRowByValues(string $table, array $fields, ?string $order = null, ?int $limit = null): ?array
     {
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select('t.*')->from($table, 't');
+        $qb->select('t.*')->from($this->quoteTable($table), 't');
         $index = 0;
         foreach ($fields as $key => $field) {
             if ($field === null) {
@@ -169,7 +169,7 @@ abstract class AbstractPdoRepository
     {
         if ($id === null) {
             $this->getDb()->insert(
-                $table,
+                $this->quoteTable($table),
                 $data
             );
 
@@ -188,10 +188,10 @@ abstract class AbstractPdoRepository
         $current = $this->selectSingleRow($table, $idColumn, $id);
         if (empty($current)) {
             $data[$idColumn] = $id;
-            $this->getDb()->insert($table, $data);
+            $this->getDb()->insert($this->quoteTable($table), $data);
             return $id;
         }
-        $this->getDb()->update($table, $data, [$idColumn . '=?' => $id]);
+        $this->getDb()->update($this->quoteTable($table), $data, [$idColumn . '=?' => $id]);
         return null;
     }
 
@@ -201,7 +201,7 @@ abstract class AbstractPdoRepository
     public function insert(string $table, array $data): int
     {
         $this->getDb()->insert(
-            $table,
+            $this->quoteTable($table),
             $data
         );
 
@@ -214,7 +214,7 @@ abstract class AbstractPdoRepository
     public function selectCount(string $table, array $parameters, ?string $groupBy = null): int
     {
         $qb = $this->getDb()->createQueryBuilder();
-        $qb->select('COUNT(1) as cnt')->from($table);
+        $qb->select('COUNT(1) as cnt')->from($this->quoteTable($table));
         $index = 0;
         foreach ($parameters as $name => $value) {
             $key = ':value_' . $index;
@@ -238,9 +238,9 @@ abstract class AbstractPdoRepository
     public function select(string $table, array|string $columns = '*'): QueryBuilder
     {
         if (is_string($columns)) {
-            return $this->getDb()->select($columns)->from($table);
+            return $this->getDb()->select($columns)->from($this->quoteTable($table));
         }
-        return $this->getDb()->select(...$columns)->from($table);
+        return $this->getDb()->select(...$columns)->from($this->quoteTable($table));
     }
 
     public function applyLimit(QueryBuilder $queryBuilder, PageableInterface $filter): QueryBuilder
@@ -272,7 +272,7 @@ abstract class AbstractPdoRepository
     public function deleteRetry(string $table, array $params, int $tries = 0): void
     {
         try {
-            $this->getDb()->delete($table, $params);
+            $this->getDb()->delete($this->quoteTable($table), $params);
         } catch (\PDOException $e) {
             if ($tries > 5) {
                 throw new \PDOException($e->getMessage(), $e->getCode(), $e->getPrevious());
