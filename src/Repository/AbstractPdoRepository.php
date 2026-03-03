@@ -117,7 +117,7 @@ abstract class AbstractPdoRepository
                 $qb->where($key . ' IS NULL');
             } else {
                 $key = 'value_' . $index;
-                $qb->where($key . ' =?', $key)
+                $qb->where($key . ' =:' . $key)
                     ->setParameter($key, $field);
             }
             $index++;
