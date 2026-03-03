@@ -360,7 +360,7 @@ abstract class AbstractPdoRepository
     protected function appendTablePrefix(string $input): string
     {
         $prefix = isset($_ENV['TABLE_PREFIX']) ? $_ENV['TABLE_PREFIX'] . '_' : '';
-        return $prefix . $input;
+        return $this->quoteTable($prefix . $input);
     }
 
     /**
