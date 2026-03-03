@@ -261,6 +261,7 @@ abstract class AbstractPdoRepository
         $qb = $this->getDb()->createQueryBuilder();
         $qb->with('count_query', $queryBuilder);
         $qb->select('COUNT(1) as cnt')->from('count_query');
+        $qb->setParameters($queryBuilder->getParameters(), $queryBuilder->getParameterTypes());
 
         $row = $qb->fetchAssociative();
         return $row ? intval($row['cnt']) : 0;
