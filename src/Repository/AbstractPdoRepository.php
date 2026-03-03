@@ -66,7 +66,7 @@ abstract class AbstractPdoRepository
         }
         $qb = $this->getDb()->createQueryBuilder();
         $qb->select('t.*')->from($table, 't')->where('t.' . $column . '=:value');
-        $qb->setParameter(':value', $value);
+        $qb->setParameter('value', $value);
         $row = $this->getDb()->fetchRow($qb);
 
         return empty($row) ? null : $row;
@@ -82,7 +82,7 @@ abstract class AbstractPdoRepository
         }
         $qb = $this->getDb()->createQueryBuilder();
         $qb->select('t.*')->from($table, 't')->where('t.' . $column . '=:value');
-        $qb->setParameter(':value', $value);
+        $qb->setParameter('value', $value);
         $sql = $qb->getSQL();
         $sql .= ' FOR UPDATE';
         $row = $this->getDb()->fetchRow($sql, $qb->getParameters());
