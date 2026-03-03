@@ -58,9 +58,9 @@ abstract class Db
             ->delete($table);
         $count = 0;
         foreach ($parameters as $expression => $value) {
-            $placeholder = ':column_' . $count;
+            $placeholder = 'column_' . $count;
             $qb->where($expression, ':' . $placeholder)
-                ->setParameter(':' . $placeholder, $value);
+                ->setParameter($placeholder, $value);
             $count++;
         }
         return (int)$qb->executeQuery()->rowCount();
