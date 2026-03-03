@@ -59,7 +59,7 @@ abstract class Db
         $count = 0;
         foreach ($parameters as $expression => $value) {
             $placeholder = 'column_' . $count;
-            $qb->where($expression, ':' . $placeholder)
+            $qb->where($expression . '=:' . $placeholder)
                 ->setParameter($placeholder, $value);
             $count++;
         }
