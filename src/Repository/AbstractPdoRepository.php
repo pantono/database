@@ -191,7 +191,7 @@ abstract class AbstractPdoRepository
             $this->getDb()->insert($this->quoteTable($table), $data);
             return $id;
         }
-        $this->getDb()->update($this->quoteTable($table), $data, [$idColumn . '=?' => $id]);
+        $this->getDb()->update($this->quoteTable($table), $data, [$idColumn => $id]);
         return null;
     }
 
