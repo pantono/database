@@ -10,6 +10,7 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Pantono\Database\Query\PantonoQueryBuilder;
 
 abstract class Db
 {
@@ -246,8 +247,8 @@ abstract class Db
         return $this->doctrineConnection;
     }
 
-    public function createQueryBuilder(): QueryBuilder
+    public function createQueryBuilder(): PantonoQueryBuilder
     {
-        return $this->getDoctrineConnection()->createQueryBuilder();
+        return new PantonoQueryBuilder($this->getDoctrineConnection());
     }
 }
