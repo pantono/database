@@ -282,6 +282,21 @@ abstract class AbstractPdoRepository
         }
     }
 
+    public function deleteNotIn(string $table, string $column, string|int $value, array $ids = [], ?string $idColumnName = 'id'): int
+    {
+        $qb = $this->getDb()->createQueryBuilder()
+            ->delete($this->quoteTable($table))
+            ->where($column . ' = :value')
+            ->setParameter('value', $value);
+
+        if (!empty($ids)) {
+            $qb->andWhere($idColumnName . ' NOT IN (:ids)')
+                ->setParameter('ids', $ids, ArrayParameterType::STRING);
+        }
+        $result = $qb->executeQuery();
+        return $result->rowCount();
+    }
+
     public function beginTransaction(): void
     {
         $this->getDb()->beginTransaction();
