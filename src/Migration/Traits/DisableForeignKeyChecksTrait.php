@@ -9,7 +9,6 @@ trait DisableForeignKeyChecksTrait
         $adapter = $this->getAdapter()->getAdapterType();
 
         switch ($adapter) {
-
             case 'mysql':
                 $this->execute('SET FOREIGN_KEY_CHECKS = 0;');
                 break;
@@ -37,7 +36,6 @@ trait DisableForeignKeyChecksTrait
         $adapter = $this->getAdapter()->getAdapterType();
 
         switch ($adapter) {
-
             case 'mysql':
                 $this->execute('SET FOREIGN_KEY_CHECKS = 1;');
                 break;
