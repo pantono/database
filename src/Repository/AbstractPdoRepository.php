@@ -294,7 +294,7 @@ abstract class AbstractPdoRepository
                 ->setParameter('ids', $ids, ArrayParameterType::STRING);
         }
         $result = $qb->executeQuery();
-        return $result->rowCount();
+        return (int)$result->rowCount();
     }
 
     public function beginTransaction(): void
