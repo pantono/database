@@ -387,5 +387,15 @@ abstract class AbstractPdoRepository
     /**
      * @param array<string,mixed> $data
      */
-    abstract public function insertIgnore(string $table, array $data): void;
+    public function insertIgnore(string $table, array $data): void
+    {
+        $qb = $this->getDb()->createQueryBuilder()->insert($table);
+        foreach ($data as $column => $value) {
+            $paramKey = uniqid('param_');
+            $qb->set($column, ':' . $paramKey)
+                ->setParameter($paramKey, $value);
+        }
+        $qb->forUpdate();
+        $qb->executeQuery();
+    }
 }
