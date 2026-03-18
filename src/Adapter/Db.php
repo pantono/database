@@ -23,7 +23,7 @@ abstract class Db
         $this->dsn = $dsn;
     }
 
-    public function select(string ...$expressions): QueryBuilder
+    public function select(string ...$expressions): PantonoQueryBuilder
     {
         return $this->createQueryBuilder()->select(...$expressions);
     }
