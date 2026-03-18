@@ -28,33 +28,36 @@ class PantonoQueryBuilder extends QueryBuilder
 
     public function jsonWhere(string $jsonColumn, array $jsonParts, string|int|null $value): self
     {
+        $paramName = uniqid('param_');
         $platform = $this->getConnection()->getDatabasePlatform();
         if ($platform instanceof AbstractMySQLPlatform) {
             $jsonPath = '$.' . implode('.', array_map(
-                    static fn(string $p) => str_replace('"', '\"', $p),
-                    $jsonParts
-                ));
+                static fn(string $p) => str_replace('"', '\"', $p),
+                $jsonParts
+            ));
             $expr = sprintf(
                 "JSON_UNQUOTE(JSON_EXTRACT(%s, %s)) = :%s",
                 $jsonColumn,
                 $this->getConnection()->quote($jsonPath),
-                $value
+                $paramName
             );
-            $this->where($expr);
+            $this->where($expr)
+                ->setParameter($paramName, $value);
         } elseif ($platform instanceof PostgreSQLPlatform) {
             $pgPath = '{' . implode(',', array_map(
-                    static fn(string $p) => str_replace(['\\', '"'], ['\\\\', '\\"'], $p),
-                    $jsonParts
-                )) . '}';
+                static fn(string $p) => str_replace(['\\', '"'], ['\\\\', '\\"'], $p),
+                $jsonParts
+            )) . '}';
 
             $expr = sprintf(
                 "%s #>> %s = :%s",
                 $jsonColumn,
                 $this->getConnection()->quote($pgPath),
-                $value
+                $paramName
             );
 
-            $this->andWhere($expr);
+            $this->where($expr)
+                ->setParameter($paramName, $value);
         } else {
             throw new \Exception('Unsupported database platform for json queries');
         }
