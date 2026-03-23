@@ -114,10 +114,10 @@ abstract class AbstractPdoRepository
         $index = 0;
         foreach ($fields as $key => $field) {
             if ($field === null) {
-                $qb->where($key . ' IS NULL');
+                $qb->andWhere($key . ' IS NULL');
             } else {
                 $param = 'value_' . $index;
-                $qb->where($key . ' =:' . $param)
+                $qb->andWhere($key . ' =:' . $param)
                     ->setParameter($param, $field);
             }
             $index++;
@@ -143,10 +143,10 @@ abstract class AbstractPdoRepository
         $index = 0;
         foreach ($fields as $key => $field) {
             if ($field === null) {
-                $qb->where($key . ' IS NULL');
+                $qb->andWhere($key . ' IS NULL');
             } else {
                 $param = 'value_' . $index;
-                $qb->where($key . ' =:' . $param)
+                $qb->andWhere($key . ' =:' . $param)
                     ->setParameter($param, $field);
             }
             $index++;
