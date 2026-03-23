@@ -75,7 +75,7 @@ abstract class Db
         $qb = $this->createQueryBuilder()
             ->insert($table);
         foreach ($parameters as $column => $value) {
-            $qb->setValue($column, ':' . $column)
+            $qb->setValue($this->quoteTable($column), ':' . $column)
                 ->setParameter($column, $value);
         }
         return (int)$qb->executeQuery()->rowCount();
