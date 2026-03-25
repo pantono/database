@@ -392,7 +392,7 @@ abstract class AbstractPdoRepository
         $qb = $this->getDb()->createQueryBuilder()->insert($table);
         foreach ($data as $column => $value) {
             $paramKey = uniqid('param_');
-            $qb->set($column, ':' . $paramKey)
+            $qb->setValue($this->quoteTable($column), ':' . $column)
                 ->setParameter($paramKey, $value);
         }
         $qb->forUpdate();
