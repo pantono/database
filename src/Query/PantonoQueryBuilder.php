@@ -21,7 +21,7 @@ class PantonoQueryBuilder extends QueryBuilder
     {
         $paramName = uniqid('param');
         $expression = str_replace('?', ':' . $paramName, $expression);
-        $this->where($expression)
+        $this->andWhere($expression)
             ->setParameter($paramName, $value);
         return $this;
     }
