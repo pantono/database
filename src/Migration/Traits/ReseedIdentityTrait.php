@@ -34,7 +34,7 @@ trait ReseedIdentityTrait
 
         if ($adapter === 'mysql') {
             $this->execute("
-            ALTER TABLE `{$table}`
+            ALTER TABLE `{$table}` SET
             AUTO_INCREMENT = (SELECT MAX({$column}) + 1 FROM `{$table}`);
         ");
         }
