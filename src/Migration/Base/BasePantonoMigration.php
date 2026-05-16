@@ -27,6 +27,14 @@ class BasePantonoMigration extends AbstractMigration
         return $table;
     }
 
+    public function tablePrefix(string $tableName, array $options = []): Table
+    {
+        $table = new Table($this->addTablePrefix($tableName), $options, $this->getAdapter());
+        $this->tables[] = $table;
+
+        return $table;
+    }
+
     public function insertOnCreate(string $tableName, array $data, bool $reSeed = true): void
     {
         if ($this->isMigratingUp()) {
