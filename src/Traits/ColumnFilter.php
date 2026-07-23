@@ -6,7 +6,7 @@ trait ColumnFilter
 {
     private array $columns = [];
 
-    public function addColumn(string $column, string|array $value, string $operator = '='): void
+    public function addColumn(string $column, string|array|int $value, string $operator = '='): void
     {
         $operator = strtoupper($operator);
         $allowedOperators = ['=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE'];
