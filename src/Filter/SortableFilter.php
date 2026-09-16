@@ -59,7 +59,9 @@ abstract class SortableFilter implements SortableInterface
         if ($sortBy === null) {
             return null;
         }
-
-        return $this->getSortableFields()[$sortBy] ?? null;
+        if (!in_array($sortBy, $this->getSortableFields())) {
+            return null;
+        }
+        return $sortBy;
     }
 }
