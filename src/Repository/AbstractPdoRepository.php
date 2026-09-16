@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pantono\Database\Repository;
 
 use Pantono\Database\Adapter\Db;
+use Pantono\Contracts\Application\Interfaces\SortableInterface;
 use Pantono\Contracts\Application\Interfaces\SavableInterface;
 use Pantono\Utilities\StringUtilities;
 use Pantono\Utilities\Model\PantonoReflectionModel;
@@ -254,6 +255,17 @@ abstract class AbstractPdoRepository
     {
         $filter->setTotalResults($this->getCount($queryBuilder));
         return $this->applyLimit($queryBuilder, $filter);
+    }
+
+    public function applySort(QueryBuilder $queryBuilder, SortableInterface $filter): QueryBuilder
+    {
+        $sortColumn = $filter->getSortColumn();
+        if ($sortColumn === null) {
+            return $queryBuilder;
+        }
+
+        $queryBuilder->addOrderBy($sortColumn, $filter->getSortDirection());
+        return $queryBuilder;
     }
 
     public function getCount(QueryBuilder $queryBuilder): int
