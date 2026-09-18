@@ -319,6 +319,11 @@ abstract class AbstractPdoRepository
         $this->getDb()->endTransaction();
     }
 
+    public function rollback(): void
+    {
+        $this->getDb()->rollback();
+    }
+
     public function saveModel(SavableInterface $model, ?string $table = null, ?string $idColumn = null): void
     {
         [$table, $idColumn] = $this->getModelTables($model::class, $table, $idColumn);

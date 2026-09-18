@@ -167,6 +167,11 @@ abstract class Db
         $this->getDoctrineConnection()->beginTransaction();
     }
 
+    public function rollback(): void
+    {
+        $this->getDoctrineConnection()->rollback();
+    }
+
     public function endTransaction(): void
     {
         $attempts = 0;
